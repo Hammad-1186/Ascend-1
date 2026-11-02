@@ -21,7 +21,7 @@ const VIEW_OPTIONS: ViewToggleOption<ViewMode>[] = [
   { value: 'grid', label: 'Grid View', icon: LayoutGrid },
 ];
 // Grid shows 3 cards per row, so 6 per page keeps every row full.
-const PAGE_SIZE: Record<ViewMode, number> = { table: 5, grid: 6 };
+const PAGE_SIZE: Record<ViewMode, number> = { table: 10, grid: 8 };
 
 interface Filters { query: string; type: '' | HrType; theme: string; lab: string }
 const NO_FILTERS: Filters = { query: '', type: '', theme: '', lab: '' };
