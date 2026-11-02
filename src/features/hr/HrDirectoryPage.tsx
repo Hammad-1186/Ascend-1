@@ -1,35 +1,43 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase, ChevronLeft, ChevronRight, Eye, Pencil, Plus, RotateCcw, Search, UserSearch, Users, UsersRound } from 'lucide-react';
+import { Briefcase, ChevronLeft, ChevronRight, Eye, LayoutGrid, Pencil, Plus, RotateCcw, Search, Table2, UserSearch, Users, UsersRound } from 'lucide-react';
 import { cn } from '../../lib';
 import PageHeader from '../../components/layout/PageHeader';
 import Badge from '../../components/ui/Badge';
 import { buttonClasses } from '../../components/ui/Button';
+import ViewToggle, { type ViewToggleOption } from '../../components/ui/ViewToggle';
 import SelectInput from '../../components/form/SelectInput';
+import HrMemberCard from './HrMemberCard';
 import { useHrCatalog } from './useHrCatalog';
 import { hrService } from './hrService';
-import { EMPTY_DISPLAY, initialsOf, resolveMemberContext } from './hrFormat';
+import { EMPTY_DISPLAY, avatarColor, initialsOf, resolveMemberContext } from './hrFormat';
 import { HR_TYPE_OPTIONS, hrTypeLabel } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember, HrType } from '../../types/hr';
 
-const PAGE_SIZE = 10;
-const AVATAR_COLORS = ['bg-primary', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-fuchsia-500', 'bg-cyan-600'];
-const avatarColor = (name: string) => AVATAR_COLORS[[...name].reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
+type ViewMode = 'table' | 'grid';
+const VIEW_OPTIONS: ViewToggleOption<ViewMode>[] = [
+  { value: 'table', label: 'Table View', icon: Table2 },
+  { value: 'grid', label: 'Grid View', icon: LayoutGrid },
+];
+// Grid shows 3 cards per row, so 6 per page keeps every row full.
+const PAGE_SIZE: Record<ViewMode, number> = { table: 5, grid: 6 };
 
-interface Filters { query: string; type: '' | HrType; theme: string; lab: string; floor: string }
-const NO_FILTERS: Filters = { query: '', type: '', theme: '', lab: '', floor: '' };
+interface Filters { query: string; type: '' | HrType; theme: string; lab: string }
+const NO_FILTERS: Filters = { query: '', type: '', theme: '', lab: '' };
 
 export default function HrDirectoryPage() {
   const { catalog } = useHrCatalog();
   const [members, setMembers] = useState<HrMember[]>([]);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [view, setView] = useState<ViewMode>('table');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => { hrService.listMembers().then(setMembers); }, []);
 
   const setFilter = (patch: Partial<Filters>) => { setFilters((f) => ({ ...f, ...patch })); setPage(1); };
+  const changeView = (next: ViewMode) => { setView(next); setPage(1); };
 
   const rows = useMemo(() => members.map((m) => ({ m, ctx: resolveMemberContext(m, catalog) })), [members, catalog]);
 
@@ -39,8 +47,7 @@ export default function HrDirectoryPage() {
       (!q || m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)) &&
       (!filters.type || m.hrType === filters.type) &&
       (!filters.theme || ctx.theme?.id === filters.theme) &&
-      (!filters.lab || m.lab === filters.lab) &&
-      (!filters.floor || String(ctx.lab?.floor) === filters.floor));
+      (!filters.lab || m.lab === filters.lab));
   }, [rows, filters]);
 
   const counts = {
@@ -49,17 +56,17 @@ export default function HrDirectoryPage() {
     strategic: members.filter((m) => m.hrType === 'strategic').length,
   };
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSize = PAGE_SIZE[view];
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pageCount);
-  const pageRows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
-  const from = filtered.length === 0 ? 0 : (current - 1) * PAGE_SIZE + 1;
-  const to = Math.min(current * PAGE_SIZE, filtered.length);
+  const pageRows = filtered.slice((current - 1) * pageSize, current * pageSize);
+  const from = filtered.length === 0 ? 0 : (current - 1) * pageSize + 1;
+  const to = Math.min(current * pageSize, filtered.length);
 
-  // Lab dropdown narrows to the chosen theme / floor, mirroring the form's Theme -> Lab cascade.
+  // Lab dropdown narrows to the chosen theme, mirroring the form's Theme -> Lab cascade.
   const labOptions = (catalog?.labs ?? [])
-    .filter((l) => (!filters.theme || l.themeId === filters.theme) && (!filters.floor || String(l.floor) === filters.floor))
+    .filter((l) => !filters.theme || l.themeId === filters.theme)
     .map((l) => ({ value: l.id, label: l.name }));
-  const floorOptions = [...new Set((catalog?.labs ?? []).map((l) => l.floor))].sort((a, b) => a - b).map((f) => ({ value: String(f), label: `Floor ${f}` }));
   const themeOptions = (catalog?.themes ?? []).map((t) => ({ value: t.id, label: t.name }));
 
   const allOnPageSelected = pageRows.length > 0 && pageRows.every(({ m }) => selected.has(m.id));
@@ -94,7 +101,7 @@ export default function HrDirectoryPage() {
         <StatCard icon={UsersRound} label="Strategic HR" value={counts.strategic} tone="bg-emerald-600" />
       </div>
 
-      <div className="mb-3 grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1.2fr_auto]">
+      <div className="mb-3 grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.8fr_1fr_1fr_1.2fr_auto]">
         <div className="relative col-span-2 lg:col-span-1">
           <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -106,85 +113,101 @@ export default function HrDirectoryPage() {
         </div>
         <SelectInput aria-label="HR Type" placeholder="All HR Types" options={HR_TYPE_OPTIONS} value={filters.type} onChange={(e) => setFilter({ type: e.target.value as Filters['type'] })} />
         <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
-        <SelectInput aria-label="Floor" placeholder="All Floors" options={floorOptions} value={filters.floor} onChange={(e) => setFilter({ floor: e.target.value, lab: '' })} />
         <SelectInput aria-label="Technology Theme" placeholder="All Themes" options={themeOptions} value={filters.theme} onChange={(e) => setFilter({ theme: e.target.value, lab: '' })} />
         <button type="button" onClick={() => { setFilters(NO_FILTERS); setPage(1); }} disabled={!hasFilters} className="col-span-2 inline-flex items-center gap-2 justify-self-end text-sm text-info lg:col-span-1 hover:underline disabled:opacity-40 disabled:no-underline">
           <RotateCcw size={15} /> Clear Filters
         </button>
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border border-line bg-surface/60 md:block">
-        <table className="w-full min-w-[900px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wide">
-              <th className="w-12 px-3 py-3"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
-              {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="px-2.5 py-3">{h}</th>)}
-              <th className="px-2.5 py-3 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageRows.map(({ m, ctx }) => (
-              <tr key={m.id} className="border-b border-line/60 last:border-0 hover:bg-white/[0.03]">
-                <td className="px-3 py-3"><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
-                <td className="px-2.5 py-3">
-                  <Link to={`/people/${m.id}`} className="flex items-center gap-3">
-                    <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
-                    <span className="min-w-0 leading-tight">
-                      <span className="block max-w-[150px] truncate font-medium">{m.name || 'Unnamed'}</span>
-                      <span className="block max-w-[150px] truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
-                    </span>
-                  </Link>
-                </td>
-                <td className="whitespace-nowrap px-2.5 py-3">{m.phone || EMPTY_DISPLAY}</td>
-                <td className="whitespace-nowrap px-2.5 py-3">{ctx.lab?.name ?? EMPTY_DISPLAY}</td>
-                <td className="px-2.5 py-3"><span className="block max-w-[150px] truncate" title={ctx.project?.title}>{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
-                <td className="whitespace-nowrap px-2.5 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
-                <td className="whitespace-nowrap px-2.5 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
-                <td className="px-2.5 py-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></td>
-                <td className="px-2.5 py-3">
-                  <div className="flex items-center justify-center gap-4">
-                    <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-white hover:text-info"><Eye size={18} /></Link>
-                    <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="text-white hover:text-info"><Pencil size={17} /></Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {pageRows.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-14 text-center text-muted"><UserSearch size={28} className="mx-auto mb-2" />No HR members match these filters.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="mb-3">
+        <ViewToggle value={view} onChange={changeView} options={VIEW_OPTIONS} />
       </div>
 
-      {/* Phones: one card per member instead of a wide table. */}
-      <div className="space-y-3 md:hidden">
-        {pageRows.map(({ m, ctx }) => (
-          <article key={m.id} className="rounded-lg border border-line bg-surface/60 p-4">
-            <Link to={`/people/${m.id}`} className="flex items-center gap-3">
-              <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
-              <span className="min-w-0 flex-1 leading-tight">
-                <span className="block truncate font-medium">{m.name || 'Unnamed'}</span>
-                <span className="block truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
-              </span>
-            </Link>
-            <div className="mt-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></div>
-            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-              <MobileField label="Contact" value={m.phone} />
-              <MobileField label="Joining Date" value={m.dateOfJoining ? formatDate(m.dateOfJoining) : ''} />
-              <MobileField label="Lab" value={ctx.lab?.name} />
-              <MobileField label="Organization" value={ctx.organization} />
-              <MobileField label="Project" value={ctx.project?.title} className="col-span-2" />
-            </dl>
-            <div className="mt-3 flex gap-2 border-t border-line pt-3">
-              <Link to={`/people/${m.id}`} className={buttonClasses('outline', 'flex-1 justify-center')}><Eye size={16} /> View</Link>
-              <Link to={`/people/${m.id}/edit`} className={buttonClasses('outline', 'flex-1 justify-center')}><Pencil size={15} /> Edit</Link>
-            </div>
-          </article>
-        ))}
-        {pageRows.length === 0 && (
-          <div className="rounded-lg border border-line bg-surface/60 px-4 py-12 text-center text-muted"><UserSearch size={28} className="mx-auto mb-2" />No HR members match these filters.</div>
-        )}
-      </div>
+      {view === 'table' ? (
+        <>
+          <div className="hidden overflow-x-auto rounded-lg border border-line bg-surface/60 md:block">
+            <table className="w-full min-w-[900px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wide">
+                  <th className="w-12 px-3 py-3"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
+                  {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="px-2.5 py-3">{h}</th>)}
+                  <th className="px-2.5 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageRows.map(({ m, ctx }) => (
+                  <tr key={m.id} className="border-b border-line/60 last:border-0 hover:bg-white/[0.03]">
+                    <td className="px-3 py-3"><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
+                    <td className="px-2.5 py-3">
+                      <Link to={`/people/${m.id}`} className="flex items-center gap-3">
+                        <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
+                        <span className="min-w-0 leading-tight">
+                          <span className="block max-w-[150px] truncate font-medium">{m.name || 'Unnamed'}</span>
+                          <span className="block max-w-[150px] truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="whitespace-nowrap px-2.5 py-3">{m.phone || EMPTY_DISPLAY}</td>
+                    <td className="whitespace-nowrap px-2.5 py-3">{ctx.lab?.name ?? EMPTY_DISPLAY}</td>
+                    <td className="px-2.5 py-3"><span className="block max-w-[150px] truncate" title={ctx.project?.title}>{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
+                    <td className="whitespace-nowrap px-2.5 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
+                    <td className="whitespace-nowrap px-2.5 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
+                    <td className="px-2.5 py-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></td>
+                    <td className="px-2.5 py-3">
+                      <div className="flex items-center justify-center gap-4">
+                        <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-white hover:text-info"><Eye size={18} /></Link>
+                        <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="text-white hover:text-info"><Pencil size={17} /></Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {pageRows.length === 0 && (
+                  <tr><td colSpan={9}><EmptyState /></td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Phones: one card per member instead of a wide table. */}
+          <div className="space-y-3 md:hidden">
+            {pageRows.map(({ m, ctx }) => (
+              <article key={m.id} className="rounded-lg border border-line bg-surface/60 p-4">
+                <Link to={`/people/${m.id}`} className="flex items-center gap-3">
+                  <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <span className="block truncate font-medium">{m.name || 'Unnamed'}</span>
+                    <span className="block truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
+                  </span>
+                </Link>
+                <div className="mt-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                  <MobileField label="Contact" value={m.phone} />
+                  <MobileField label="Joining Date" value={m.dateOfJoining ? formatDate(m.dateOfJoining) : ''} />
+                  <MobileField label="Lab" value={ctx.lab?.name} />
+                  <MobileField label="Organization" value={ctx.organization} />
+                  <MobileField label="Project" value={ctx.project?.title} className="col-span-2" />
+                </dl>
+                <div className="mt-3 flex gap-2 border-t border-line pt-3">
+                  <Link to={`/people/${m.id}`} className={buttonClasses('outline', 'flex-1 justify-center')}><Eye size={16} /> View</Link>
+                  <Link to={`/people/${m.id}/edit`} className={buttonClasses('outline', 'flex-1 justify-center')}><Pencil size={15} /> Edit</Link>
+                </div>
+              </article>
+            ))}
+            {pageRows.length === 0 && (
+              <div className="rounded-lg border border-line bg-surface/60"><EmptyState /></div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {pageRows.map(({ m, ctx }) => <HrMemberCard key={m.id} member={m} ctx={ctx} />)}
+          </div>
+          {pageRows.length === 0 && (
+            <div className="rounded-lg border border-line bg-surface/60"><EmptyState /></div>
+          )}
+        </>
+      )}
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">Showing {from}–{to} of {filtered.length} HR members</p>
@@ -199,6 +222,14 @@ export default function HrDirectoryPage() {
           <PageBtn aria-label="Next page" disabled={current === pageCount} onClick={() => setPage(current + 1)}><ChevronRight size={16} /></PageBtn>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="px-4 py-14 text-center text-muted">
+      <UserSearch size={28} className="mx-auto mb-2" />No HR members match these filters.
     </div>
   );
 }

@@ -54,3 +54,8 @@ export const initialsOf = (name: string): string => {
   if (parts.length === 0) return '?';
   return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
 };
+
+const AVATAR_COLORS = ['bg-primary', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-fuchsia-500', 'bg-cyan-600'];
+
+/** Stable avatar colour per person (same name -> same colour in the table and the grid cards). */
+export const avatarColor = (name: string): string => AVATAR_COLORS[[...name].reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
