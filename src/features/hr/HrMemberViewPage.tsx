@@ -61,7 +61,7 @@ function MemberDetails({ member, catalog }: { member: HrMember; catalog: HrCatal
   };
 
   return (
-    <div className="px-6 py-4">
+    <div className="px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
@@ -86,9 +86,9 @@ function MemberDetails({ member, catalog }: { member: HrMember; catalog: HrCatal
             </div>
           </div>
           {member.hrType === 'contractual' && (
-            <dl className="flex gap-6 text-sm">
+            <dl className="flex w-full flex-wrap gap-x-6 gap-y-2 text-sm sm:w-auto">
               {[{ l: 'Lab', v: ctx.lab?.name }, { l: 'Theme', v: ctx.theme?.name }, { l: 'Project', v: project?.code }].map((x) => (
-                <div key={x.l} className="min-w-0"><dt className="text-muted">{x.l}</dt><dd className="max-w-[170px] truncate font-medium" title={x.v}>{x.v ?? EMPTY_DISPLAY}</dd></div>
+                <div key={x.l} className="min-w-0"><dt className="text-muted">{x.l}</dt><dd className="max-w-[220px] truncate font-medium sm:max-w-[170px]" title={x.v}>{x.v ?? EMPTY_DISPLAY}</dd></div>
               ))}
             </dl>
           )}

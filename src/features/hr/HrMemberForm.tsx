@@ -67,16 +67,17 @@ export default function HrMemberForm({ form, catalog, mode, saving, onSubmit, on
       <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />
 
       {/* Fixed-height body: one step per screen, nothing scrolls. */}
-      <div className="min-h-0 flex-1 space-y-3 overflow-hidden">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto md:overflow-hidden">
         {isReview ? <ReviewStep form={form} catalog={catalog} /> : currentStep?.groups.map(renderGroup)}
       </div>
 
-      <footer className="flex items-center gap-3 border-t border-line pt-3">
+      <footer className="flex items-center gap-2 border-t border-line pt-3 sm:gap-3">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <span className="ml-auto text-sm text-muted">Step {stepIndex + 1} of {stepItems.length}</span>
+        <span className="ml-auto md:hidden" />
+        <span className="ml-auto hidden text-sm text-muted md:inline">Step {stepIndex + 1} of {stepItems.length}</span>
         <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev} disabled={isFirst}>Previous</Button>
         {isReview ? (
-          <Button type="submit" icon={Save} disabled={saving}>{saving ? 'Saving…' : mode === 'edit' ? 'Save Changes' : 'Save HR Record'}</Button>
+          <Button type="submit" icon={Save} disabled={saving}><span className="sm:hidden">{saving ? 'Saving…' : 'Save'}</span><span className="hidden sm:inline">{saving ? 'Saving…' : mode === 'edit' ? 'Save Changes' : 'Save HR Record'}</span></Button>
         ) : (
           <Button type="submit" disabled={saving}>Next <ChevronRight size={16} /></Button>
         )}

@@ -1,26 +1,11 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ChevronsLeft, ChevronRight, LogOut, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, ChevronRight, LogOut, X, type LucideIcon } from 'lucide-react';
 import { NAV_GROUPS } from '../../config/navigation';
 import { cn } from '../../lib';
 import type { CurrentUser } from '../../mocks/currentUser';
 import ThemeToggle from './ThemeToggle';
-
-function Logo() {
-  return (
-    <svg viewBox="0 0 32 32" className="h-9 w-9 shrink-0" aria-hidden="true">
-      <defs>
-        <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#22d3ee" />
-        </linearGradient>
-      </defs>
-      <g fill="none" stroke="url(#logo-g)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 4 4 10l12 6 12-6z" /><path d="M4 16l12 6 12-6" /><path d="M4 22l12 6 12-6" />
-      </g>
-    </svg>
-  );
-}
+import Logo from './Logo';
 
 function SectionLabel({ children, collapsed }: { children: ReactNode; collapsed: boolean }) {
   if (collapsed) return <div className="mx-4 mt-4 h-px bg-line" />;
@@ -32,10 +17,11 @@ function SectionLabel({ children, collapsed }: { children: ReactNode; collapsed:
   );
 }
 
-function NavItem({ to, label, icon: Icon, collapsed }: { to: string; label: string; icon: LucideIcon; collapsed: boolean }) {
+function NavItem({ to, label, icon: Icon, collapsed, onNavigate }: { to: string; label: string; icon: LucideIcon; collapsed: boolean; onNavigate?: () => void }) {
   return (
     <NavLink
       to={to}
+      onClick={onNavigate}
       title={collapsed ? label : undefined}
       className={({ isActive }) =>
         cn(
@@ -57,46 +43,85 @@ function NavItem({ to, label, icon: Icon, collapsed }: { to: string; label: stri
   );
 }
 
-interface Props { collapsed: boolean; onToggle: () => void; user: CurrentUser; onLogout: () => void }
+interface Props {
+  collapsed: boolean;
+  onToggle: () => void;
+  user: CurrentUser;
+  onLogout: () => void;
+  /** Phone layout: the sidebar becomes an off-canvas drawer opened from the hamburger button. */
+  mobile: boolean;
+  open: boolean;
+  onClose: () => void;
+}
 
 /** `user` = { name, role } - static now, from auth context later. */
-export default function Sidebar({ collapsed, onToggle, user, onLogout }: Props) {
+export default function Sidebar({ collapsed: collapsedProp, onToggle, user, onLogout, mobile, open, onClose }: Props) {
+  const collapsed = collapsedProp && !mobile; // the drawer is always full width
+
+  useEffect(() => {
+    if (!mobile || !open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobile, open, onClose]);
+
   return (
-    <aside className={cn('flex h-full shrink-0 flex-col border-r border-line bg-gradient-to-b from-sidebar-from to-sidebar-to transition-[width]', collapsed ? 'w-[76px]' : 'w-[230px]')}>
-      <div className={cn('flex items-center gap-2.5 px-4 py-4', collapsed && 'flex-col')}>
-        <Logo />
-        {!collapsed && <span className="flex-1 text-[15px] font-semibold leading-tight">ASCEND Lab<br />Systems</span>}
-        <button type="button" onClick={onToggle} aria-label="Toggle sidebar" className="text-muted hover:text-white">
-          <ChevronsLeft size={16} className={cn(collapsed && 'rotate-180')} />
-        </button>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto pb-2">
-        {NAV_GROUPS.map((g) => (
-          <div key={g.label}>
-            <SectionLabel collapsed={collapsed}>{g.label}</SectionLabel>
-            <div className="mt-1 flex flex-col gap-0.5">
-              {g.items.map((i) => <NavItem key={i.to} {...i} collapsed={collapsed} />)}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      <div className="space-y-3 p-3">
-        <ThemeToggle collapsed={collapsed} />
-        <div className={cn('flex items-center gap-2.5 px-1', collapsed && 'flex-col')}>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold ring-2 ring-primary-2/60">
-            {user.name.charAt(0).toUpperCase()}
-          </span>
-          {!collapsed && (
-            <div className="flex-1 leading-tight">
-              <p className="text-sm font-semibold">{user.name}</p>
-              <span className="mt-1 inline-block rounded-full bg-primary-soft px-2 text-[10px] font-semibold text-info">{user.role}</span>
-            </div>
+    <>
+      {mobile && (
+        <div
+          onClick={onClose}
+          aria-hidden="true"
+          className={cn('fixed inset-0 z-30 bg-black/60 transition-opacity duration-200', open ? 'opacity-100' : 'pointer-events-none opacity-0')}
+        />
+      )}
+      <aside
+        aria-hidden={mobile && !open ? true : undefined}
+        className={cn(
+          'flex h-full shrink-0 flex-col border-r border-line bg-gradient-to-b from-sidebar-from to-sidebar-to',
+          mobile
+            ? cn('fixed inset-y-0 left-0 z-40 w-[260px] transition-[transform,visibility] duration-200', open ? 'visible translate-x-0' : 'invisible -translate-x-full')
+            : cn('transition-[width]', collapsed ? 'w-[76px]' : 'w-[230px]'),
+        )}
+      >
+        <div className={cn('flex items-center gap-2.5 px-4 py-4', collapsed && 'flex-col')}>
+          <Logo />
+          {!collapsed && <span className="flex-1 text-[15px] font-semibold leading-tight">ASCEND Lab<br />Systems</span>}
+          {mobile ? (
+            <button type="button" onClick={onClose} aria-label="Close menu" className="grid h-9 w-9 place-items-center rounded-md text-muted hover:text-white"><X size={20} /></button>
+          ) : (
+            <button type="button" onClick={onToggle} aria-label="Toggle sidebar" className="text-muted hover:text-white">
+              <ChevronsLeft size={16} className={cn(collapsed && 'rotate-180')} />
+            </button>
           )}
-          <button type="button" onClick={onLogout} aria-label="Log out" className="text-muted hover:text-white"><LogOut size={16} /></button>
         </div>
-      </div>
-    </aside>
+
+        <nav className="flex-1 overflow-y-auto pb-2">
+          {NAV_GROUPS.map((g) => (
+            <div key={g.label}>
+              <SectionLabel collapsed={collapsed}>{g.label}</SectionLabel>
+              <div className="mt-1 flex flex-col gap-0.5">
+                {g.items.map((i) => <NavItem key={i.to} {...i} collapsed={collapsed} onNavigate={mobile ? onClose : undefined} />)}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="space-y-3 p-3">
+          <ThemeToggle collapsed={collapsed} />
+          <div className={cn('flex items-center gap-2.5 px-1', collapsed && 'flex-col')}>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold ring-2 ring-primary-2/60">
+              {user.name.charAt(0).toUpperCase()}
+            </span>
+            {!collapsed && (
+              <div className="flex-1 leading-tight">
+                <p className="text-sm font-semibold">{user.name}</p>
+                <span className="mt-1 inline-block rounded-full bg-primary-soft px-2 text-[10px] font-semibold text-info">{user.role}</span>
+              </div>
+            )}
+            <button type="button" onClick={onLogout} aria-label="Log out" className="text-muted hover:text-white"><LogOut size={16} /></button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

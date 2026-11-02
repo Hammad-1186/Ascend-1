@@ -74,11 +74,11 @@ export default function HrDirectoryPage() {
     return next;
   });
 
-  const pages = Array.from({ length: pageCount }, (_, i) => i + 1).filter((p) => Math.abs(p - current) <= 2 || p === 1 || p === pageCount);
+  const pages = Array.from({ length: pageCount }, (_, i) => i + 1).filter((p) => Math.abs(p - current) <= 1 || p === 1 || p === pageCount);
   const hasFilters = JSON.stringify(filters) !== JSON.stringify(NO_FILTERS);
 
   return (
-    <div className="px-6 py-4">
+    <div className="px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
         backTo="/dashboard"
         backLabel="Back to Dashboard"
@@ -88,7 +88,7 @@ export default function HrDirectoryPage() {
         actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR Member</Link>}
       />
 
-      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard icon={UsersRound} label="Total HR Members" value={counts.total} tone="bg-primary-soft" />
         <StatCard icon={Briefcase} label="Contractual HR (RA)" value={counts.contractual} tone="bg-primary-soft" />
         <StatCard icon={UsersRound} label="Strategic HR" value={counts.strategic} tone="bg-emerald-600" />
@@ -108,25 +108,12 @@ export default function HrDirectoryPage() {
         <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
         <SelectInput aria-label="Floor" placeholder="All Floors" options={floorOptions} value={filters.floor} onChange={(e) => setFilter({ floor: e.target.value, lab: '' })} />
         <SelectInput aria-label="Technology Theme" placeholder="All Themes" options={themeOptions} value={filters.theme} onChange={(e) => setFilter({ theme: e.target.value, lab: '' })} />
-        <button type="button" onClick={() => { setFilters(NO_FILTERS); setPage(1); }} disabled={!hasFilters} className="inline-flex items-center gap-2 justify-self-end text-sm text-info hover:underline disabled:opacity-40 disabled:no-underline">
+        <button type="button" onClick={() => { setFilters(NO_FILTERS); setPage(1); }} disabled={!hasFilters} className="col-span-2 inline-flex items-center gap-2 justify-self-end text-sm text-info lg:col-span-1 hover:underline disabled:opacity-40 disabled:no-underline">
           <RotateCcw size={15} /> Clear Filters
         </button>
       </div>
 
-      {/* <div className="mb-3 flex gap-3">
-        {[{ value: '' as const, label: 'All HR' }, ...HR_TYPE_OPTIONS.map((o) => ({ value: o.value as HrType, label: o.label }))].map((t) => (
-          <button
-            key={t.label}
-            type="button"
-            onClick={() => setFilter({ type: t.value })}
-            className={cn('rounded-full border px-5 py-1.5 text-sm font-medium transition', filters.type === t.value ? 'border-primary bg-primary text-white' : 'border-line text-white hover:bg-surface')}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div> */}
-
-      <div className="overflow-x-auto rounded-lg border border-line bg-surface/60">
+      <div className="hidden overflow-x-auto rounded-lg border border-line bg-surface/60 md:block">
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead>
             <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wide">
@@ -169,9 +156,39 @@ export default function HrDirectoryPage() {
         </table>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
+      {/* Phones: one card per member instead of a wide table. */}
+      <div className="space-y-3 md:hidden">
+        {pageRows.map(({ m, ctx }) => (
+          <article key={m.id} className="rounded-lg border border-line bg-surface/60 p-4">
+            <Link to={`/people/${m.id}`} className="flex items-center gap-3">
+              <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate font-medium">{m.name || 'Unnamed'}</span>
+                <span className="block truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
+              </span>
+            </Link>
+            <div className="mt-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></div>
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+              <MobileField label="Contact" value={m.phone} />
+              <MobileField label="Joining Date" value={m.dateOfJoining ? formatDate(m.dateOfJoining) : ''} />
+              <MobileField label="Lab" value={ctx.lab?.name} />
+              <MobileField label="Organization" value={ctx.organization} />
+              <MobileField label="Project" value={ctx.project?.title} className="col-span-2" />
+            </dl>
+            <div className="mt-3 flex gap-2 border-t border-line pt-3">
+              <Link to={`/people/${m.id}`} className={buttonClasses('outline', 'flex-1 justify-center')}><Eye size={16} /> View</Link>
+              <Link to={`/people/${m.id}/edit`} className={buttonClasses('outline', 'flex-1 justify-center')}><Pencil size={15} /> Edit</Link>
+            </div>
+          </article>
+        ))}
+        {pageRows.length === 0 && (
+          <div className="rounded-lg border border-line bg-surface/60 px-4 py-12 text-center text-muted"><UserSearch size={28} className="mx-auto mb-2" />No HR members match these filters.</div>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">Showing {from}–{to} of {filtered.length} HR members</p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-center sm:self-auto">
           <PageBtn aria-label="Previous page" disabled={current === 1} onClick={() => setPage(current - 1)}><ChevronLeft size={16} /></PageBtn>
           {pages.map((p, i) => (
             <span key={p} className="flex items-center gap-2">
@@ -188,9 +205,9 @@ export default function HrDirectoryPage() {
 
 function StatCard({ icon: Icon, label, value, tone }: { icon: typeof Users; label: string; value: number; tone: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-lg border border-line bg-surface/60 p-4">
-      <span className={cn('grid h-14 w-14 place-items-center rounded-full ring-2 ring-primary/40', tone)}><Icon size={24} /></span>
-      <div><p className="text-sm">{label}</p><p className="text-3xl font-bold leading-tight">{value}</p></div>
+    <div className="flex flex-col items-start gap-2 rounded-lg border border-line bg-surface/60 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+      <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full ring-2 ring-primary/40 sm:h-14 sm:w-14', tone)}><Icon size={18} className="sm:h-6 sm:w-6" /></span>
+      <div className="min-w-0"><p className="text-xs leading-tight sm:text-sm">{label}</p><p className="text-2xl font-bold leading-tight sm:text-3xl">{value}</p></div>
     </div>
   );
 }
@@ -202,5 +219,14 @@ function PageBtn({ active, className, ...rest }: { active?: boolean } & React.Bu
       className={cn('grid h-9 min-w-9 place-items-center rounded-md border px-2 text-sm transition disabled:opacity-40', active ? 'border-primary bg-primary text-white' : 'border-line hover:bg-surface', className)}
       {...rest}
     />
+  );
+}
+
+function MobileField({ label, value, className }: { label: string; value?: string; className?: string }) {
+  return (
+    <div className={cn('min-w-0', className)}>
+      <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
+      <dd className="truncate font-medium" title={value}>{value || EMPTY_DISPLAY}</dd>
+    </div>
   );
 }

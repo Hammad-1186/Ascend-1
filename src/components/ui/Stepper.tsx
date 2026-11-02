@@ -14,7 +14,7 @@ interface Props {
 /** Horizontal progress tracker: done steps get a tick, the current step is highlighted, connectors fill as you go. */
 export default function Stepper({ steps, current, maxReached, onSelect }: Props) {
   return (
-    <nav aria-label="Form progress" className="rounded-lg border border-line bg-surface/60 px-5 py-3">
+    <nav aria-label="Form progress" className="rounded-lg border border-line bg-surface/60 px-3 py-3 sm:px-5">
       <ol className="flex items-center">
         {steps.map((s, i) => {
           const done = i < current;
@@ -32,7 +32,7 @@ export default function Stepper({ steps, current, maxReached, onSelect }: Props)
               >
                 <span
                   className={cn(
-                    'grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 text-sm font-semibold transition',
+                    'grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-sm font-semibold transition sm:h-9 sm:w-9',
                     done && 'border-primary bg-primary text-white',
                     active && 'border-primary bg-primary-soft text-white ring-4 ring-primary/25',
                     !done && !active && 'border-field-line bg-field text-muted',
@@ -40,13 +40,13 @@ export default function Stepper({ steps, current, maxReached, onSelect }: Props)
                 >
                   {done ? <Check size={16} /> : <Icon size={16} />}
                 </span>
-                <span className="min-w-0 leading-tight">
+                <span className="hidden min-w-0 leading-tight sm:block">
                   <span className="block text-[11px] uppercase tracking-wide text-muted">Step {i + 1}</span>
                   <span className={cn('block max-w-[9.5rem] truncate text-sm font-medium', active || done ? 'text-white' : 'text-muted')}>{s.title}</span>
                 </span>
               </button>
               {i < steps.length - 1 && (
-                <span className="mx-3 h-0.5 min-w-4 flex-1 rounded bg-field-line">
+                <span className="mx-1.5 h-0.5 min-w-3 flex-1 rounded bg-field-line sm:mx-3">
                   <span className={cn('block h-full rounded bg-primary transition-all duration-300', done ? 'w-full' : 'w-0')} />
                 </span>
               )}
@@ -54,6 +54,9 @@ export default function Stepper({ steps, current, maxReached, onSelect }: Props)
           );
         })}
       </ol>
+      <p className="mt-2 truncate text-center text-sm font-medium sm:hidden">
+        <span className="text-muted">Step {current + 1} of {steps.length} · </span>{steps[current]?.title}
+      </p>
     </nav>
   );
 }

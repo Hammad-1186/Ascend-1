@@ -69,7 +69,7 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
 
   return (
     // h-full + overflow-hidden: the page itself never scrolls either.
-    <div className="flex h-full min-h-0 flex-col overflow-hidden px-6 py-4">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
