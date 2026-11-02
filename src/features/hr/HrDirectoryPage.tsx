@@ -13,7 +13,7 @@ import { HR_TYPE_OPTIONS, hrTypeLabel } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember, HrType } from '../../types/hr';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 const AVATAR_COLORS = ['bg-primary', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-fuchsia-500', 'bg-cyan-600'];
 const avatarColor = (name: string) => AVATAR_COLORS[[...name].reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 
