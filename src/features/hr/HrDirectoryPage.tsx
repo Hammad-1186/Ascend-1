@@ -113,7 +113,7 @@ export default function HrDirectoryPage() {
         </button>
       </div>
 
-      <div className="mb-3 flex gap-3">
+      {/* <div className="mb-3 flex gap-3">
         {[{ value: '' as const, label: 'All HR' }, ...HR_TYPE_OPTIONS.map((o) => ({ value: o.value as HrType, label: o.label }))].map((t) => (
           <button
             key={t.label}
@@ -124,7 +124,7 @@ export default function HrDirectoryPage() {
             {t.label}
           </button>
         ))}
-      </div>
+      </div> */}
 
       <div className="overflow-x-auto rounded-lg border border-line bg-surface/60">
         <table className="w-full min-w-[900px] text-left text-sm">
