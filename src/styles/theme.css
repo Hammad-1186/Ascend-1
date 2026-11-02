@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Colour tokens as space-separated RGB so Tailwind opacity utilities work (bg-primary/20). */
+:root,
+[data-theme='dark'] {
+  --c-bg: 3 15 41;
+  --c-surface: 5 25 60;
+  --c-border: 18 54 104;
+  --c-field: 3 22 54;
+  --c-field-border: 24 64 120;
+  --c-muted: 141 162 200;
+  --c-danger: 255 59 78;
+  --c-info: 126 192 255;
+  --c-primary: 23 115 245;
+  --c-primary-2: 20 160 235;
+  --c-primary-soft: 11 42 94;
+  --c-sidebar-from: 10 27 62;
+  --c-sidebar-to: 7 18 43;
+  color-scheme: dark;
+}
+/* TODO: add [data-theme='light'] { ... } overrides here when a light theme is needed. */
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-app font-sans text-white antialiased; }
+}
+@layer components {
+  .app-bg {
+    background:
+      radial-gradient(900px 400px at 50% -10%, rgb(var(--c-primary) / 0.10), transparent 70%),
+      rgb(var(--c-bg));
+  }
+}
