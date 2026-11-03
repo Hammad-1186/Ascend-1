@@ -59,17 +59,20 @@ function ChainNode({ icon: Icon, label, value }: { icon: LucideIcon; label: stri
 
 type YesNo = 'yes' | 'no' | '';
 
-/** One row of the onboarding tracker: green tick = yes, red cross = no, grey dot = not set yet. */
+/**
+ * One row of the onboarding tracker.
+ * Yes = brand blue (filled, tick), No = amber (outlined, cross), not set = dashed grey. Deliberately not green/red.
+ */
 function ProgressRow({ icon: Icon, label, value, last }: { icon: LucideIcon; label: string; value: YesNo; last?: boolean }) {
   const state = value === 'yes' ? 'done' : value === 'no' ? 'no' : 'unset';
   return (
     <li className="relative flex items-center gap-3 pb-4 last:pb-0">
-      {!last && <span className={cn('absolute left-[17px] top-9 h-[calc(100%-2.25rem)] w-0.5', state === 'done' ? 'bg-emerald-500' : 'bg-field-line')} />}
+      {!last && <span className={cn('absolute left-[17px] top-9 h-[calc(100%-2.25rem)] w-0.5', state === 'done' ? 'bg-primary/70' : 'bg-field-line')} />}
       <span
         className={cn(
           'z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full border-2',
-          state === 'done' && 'border-emerald-500 bg-emerald-500 text-white',
-          state === 'no' && 'border-danger bg-danger/15 text-danger',
+          state === 'done' && 'border-transparent bg-gradient-to-br from-primary to-primary-2 text-white shadow-md shadow-primary/30',
+          state === 'no' && 'border-amber-500 bg-amber-500/15 text-amber-600',
           state === 'unset' && 'border-dashed border-field-line bg-field text-muted',
         )}
       >
@@ -79,8 +82,8 @@ function ProgressRow({ icon: Icon, label, value, last }: { icon: LucideIcon; lab
       <span
         className={cn(
           'rounded-full px-3 py-0.5 text-xs font-semibold',
-          state === 'done' && 'bg-emerald-500/90 text-white',
-          state === 'no' && 'bg-danger/20 text-danger',
+          state === 'done' && 'bg-primary-soft text-info ring-1 ring-primary/50',
+          state === 'no' && 'bg-amber-500/15 text-amber-600 ring-1 ring-amber-500/40',
           state === 'unset' && 'border border-line text-muted',
         )}
       >
@@ -135,7 +138,7 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
           </div>
         </div>
 
-        <div className={cn('mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2', isRa && 'lg:grid-cols-4')}>
+        <div className={cn('mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2', isRa ? 'lg:grid-cols-4' : 'lg:grid-cols-2')}>
           {isRa ? (
             <>
               <StatTile icon={CalendarDays} label="Date of Joining" value={member.dateOfJoining ? formatDate(member.dateOfJoining) : undefined} />
@@ -145,8 +148,8 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
             </>
           ) : (
             <>
+              <StatTile icon={Building2} label="Commission" value={ctx.commission || undefined} />
               <StatTile icon={Building2} label="Organization" value={ctx.organization || undefined} />
-              <StatTile icon={CalendarDays} label="Date of Joining" value={member.dateOfJoining ? formatDate(member.dateOfJoining) : undefined} />
             </>
           )}
         </div>
@@ -178,7 +181,7 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
             </div>
           </Card>
 
-          <Card title="Onboarding" icon={UserCheck} aside={<Badge tone={doneCount === 3 ? 'success' : 'soft'}>{doneCount} of 3 done</Badge>}>
+          <Card title="Onboarding" icon={UserCheck} aside={<Badge tone={doneCount === 3 ? 'solid' : 'soft'}>{doneCount} of 3 done</Badge>}>
             <ol className="pt-1">
               {steps.map((s, i) => <ProgressRow key={s.label} {...s} last={i === steps.length - 1} />)}
             </ol>
@@ -186,12 +189,12 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
         </div>
       )}
 
-      {/* 3. Notes */}
-      <Card title="Remarks" icon={MessageSquareText}>
+      {/* 3. Notes (contractual only - Strategic HR has no remarks field) */}
+      {isRa && <Card title="Remarks" icon={MessageSquareText}>
         {member.remarks
           ? <p className="whitespace-pre-line text-sm leading-relaxed">{member.remarks}</p>
           : <p className="text-sm italic text-muted">No remarks added.</p>}
-      </Card>
+      </Card>}
     </div>
   );
 }

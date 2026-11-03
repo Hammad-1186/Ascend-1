@@ -23,7 +23,7 @@ interface Props {
 }
 
 /**
- * Multi-step form. Stepper on top (left-aligned, hidden on Review), the step's cards, and Previous / Next right
+ * Multi-step form (Strategic HR: one single page, no stepper / review). Stepper on top (left-aligned, hidden on Review), the step's cards, and Previous / Next right
  * under the last card. The Review step is the same summary as the View page.
  * Presentational - all state lives in useHrMemberForm; Save / Cancel are in the page header (HrMemberFormPage).
  */
@@ -34,7 +34,7 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
   // Enter inside an input moves to the next step instead of saving early.
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (isReview) onSubmit();
+    if (isReview || form.isSingleStep) onSubmit(); // Strategic HR has one page: Enter saves it
     else form.goNext();
   };
 
@@ -42,7 +42,7 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
   const draft: HrMember = { id: 'draft', ...form.buildPayload() };
 
   const renderGroup = (g: FormGroup) => (
-    <SectionCard key={g.id} title={g.title} aside={g.showProjectHint ? form.projectHint : undefined}>
+    <SectionCard key={g.id} title={g.title}>
       {g.kind === 'hrType' ? (
         <RadioCardGroup<HrType> name="hrType" options={HR_TYPE_OPTIONS as Array<{ value: HrType; label: string }>} value={form.hrType} onChange={form.setHrType} />
       ) : (
@@ -67,17 +67,19 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
 
   return (
     <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-3">
-      {!isReview && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
+      {!isReview && !form.isSingleStep && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
 
       {/* Only this area scrolls, and only if a step is taller than the screen. */}
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
         {isReview ? <MemberOverview member={draft} catalog={catalog} /> : currentStep?.groups.map(renderGroup)}
 
         {/* Right after the last card, not pinned to the bottom of the screen. */}
-        <div className="flex items-center justify-between gap-3 pt-1">
-          {isFirst ? <span /> : <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev}>Previous</Button>}
-          {!isReview && <Button type="submit" disabled={saving}>Next <ChevronRight size={16} /></Button>}
-        </div>
+        {!form.isSingleStep && (
+          <div className="flex items-center justify-between gap-3 pt-1">
+            {isFirst ? <span /> : <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev}>Previous</Button>}
+            {!isReview && <Button type="submit" disabled={saving}>Next <ChevronRight size={16} /></Button>}
+          </div>
+        )}
       </div>
     </form>
   );

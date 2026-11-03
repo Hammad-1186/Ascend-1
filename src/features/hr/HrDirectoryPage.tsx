@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Briefcase, ChevronLeft, ChevronRight, Eye, LayoutGrid, Pencil, Plus, RotateCcw, Search, Table2, UserSearch, Users, UsersRound } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Briefcase, CheckCircle2, ChevronLeft, ChevronRight, Eye, Pencil, Plus, RotateCcw, Search, UserSearch, Users, UsersRound, X } from 'lucide-react';
 import { cn } from '../../lib';
 import PageHeader from '../../components/layout/PageHeader';
 import Badge from '../../components/ui/Badge';
 import { buttonClasses } from '../../components/ui/Button';
-import ViewToggle, { type ViewToggleOption } from '../../components/ui/ViewToggle';
 import SelectInput from '../../components/form/SelectInput';
-import HrMemberCard from './HrMemberCard';
 import { useHrCatalog } from './useHrCatalog';
 import { hrService } from './hrService';
 import { EMPTY_DISPLAY, avatarColor, initialsOf, resolveMemberContext } from './hrFormat';
@@ -15,30 +13,38 @@ import { HR_TYPE_OPTIONS, HR_TYPE_TONE, hrTypeLabel } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember, HrType } from '../../types/hr';
 
-type ViewMode = 'table' | 'grid';
-const VIEW_OPTIONS: ViewToggleOption<ViewMode>[] = [
-  { value: 'table', label: 'Table View', icon: Table2 },
-  { value: 'grid', label: 'Grid View', icon: LayoutGrid },
-];
-// Grid shows 1, 2 or 3 cards per row depending on width, so 6 per page keeps every row full.
-const PAGE_SIZE: Record<ViewMode, number> = { table: 5, grid: 6 };
+const PAGE_SIZE = 5;
+/** Two alternating row colours (defined for light AND dark in styles/theme.css). */
+const ROW_STRIPE = 'odd:bg-row-a even:bg-row-b';
 
 interface Filters { query: string; type: '' | HrType; theme: string; lab: string }
 const NO_FILTERS: Filters = { query: '', type: '', theme: '', lab: '' };
 
 export default function HrDirectoryPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { catalog } = useHrCatalog();
   const [members, setMembers] = useState<HrMember[]>([]);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [view, setView] = useState<ViewMode>('table');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  const [notice, setNotice] = useState<string>((location.state as { notice?: string } | null)?.notice ?? '');
+
   useEffect(() => { hrService.listMembers().then(setMembers); }, []);
 
+  // Success message handed over by the form page. Clear the router state so a refresh doesn't show it again.
+  useEffect(() => {
+    if (!(location.state as { notice?: string } | null)?.notice) return;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(''), 5000);
+    return () => clearTimeout(t);
+  }, [notice]);
+
   const setFilter = (patch: Partial<Filters>) => { setFilters((f) => ({ ...f, ...patch })); setPage(1); };
-  const changeView = (next: ViewMode) => { setView(next); setPage(1); };
 
   const rows = useMemo(() => members.map((m) => ({ m, ctx: resolveMemberContext(m, catalog) })), [members, catalog]);
 
@@ -57,7 +63,7 @@ export default function HrDirectoryPage() {
     strategic: members.filter((m) => m.hrType === 'strategic').length,
   };
 
-  const pageSize = PAGE_SIZE[view];
+  const pageSize = PAGE_SIZE;
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pageCount);
   const pageRows = filtered.slice((current - 1) * pageSize, current * pageSize);
@@ -92,10 +98,18 @@ export default function HrDirectoryPage() {
         actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR</Link>}
       />
 
+      {notice && (
+        <div role="status" className="mb-3 flex items-center gap-2.5 rounded-lg border border-primary/40 bg-primary-soft px-4 py-3 text-base font-medium text-info">
+          <CheckCircle2 size={20} className="shrink-0" />
+          <span className="flex-1">{notice}</span>
+          <button type="button" aria-label="Dismiss message" onClick={() => setNotice('')} className="rounded p-1 hover:bg-ink/10"><X size={16} /></button>
+        </div>
+      )}
+
       <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard icon={UsersRound} label="Total HR Members" value={counts.total} tone="bg-primary-soft text-info" />
-        <StatCard icon={Briefcase} label="Contractual HR (RA)" value={counts.contractual} tone="bg-primary-soft text-info" />
-        <StatCard icon={UsersRound} label="Strategic HR" value={counts.strategic} tone="bg-emerald-600 text-white" />
+        <StatCard icon={Briefcase} label="Contractual" value={counts.contractual} tone="bg-primary-soft text-info" />
+        <StatCard icon={UsersRound} label="Strategic" value={counts.strategic} tone="bg-emerald-600 text-white" />
       </div>
 
       <div className="mb-3 grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.8fr_1fr_1fr_1.2fr_auto]">
@@ -116,13 +130,8 @@ export default function HrDirectoryPage() {
         </button>
       </div>
 
-      <div className="mb-3">
-        <ViewToggle value={view} onChange={changeView} options={VIEW_OPTIONS} />
-      </div>
-
-      {view === 'table' ? (
-        <>
-          <div className="hidden overflow-x-auto rounded-lg border border-line bg-surface/60 md:block">
+      {/* Same table on every screen size; on narrow screens it scrolls horizontally. */}
+          <div className="overflow-x-auto rounded-lg border border-line">
             <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wide">
@@ -133,7 +142,7 @@ export default function HrDirectoryPage() {
               </thead>
               <tbody>
                 {pageRows.map(({ m, ctx }) => (
-                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className="cursor-pointer border-b border-line/60 last:border-0 hover:bg-ink/[0.03]">
+                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/10', ROW_STRIPE)}>
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
                     <td className="px-2 py-3">
                       <Link to={`/people/${m.id}`} className="flex items-center gap-2.5">
@@ -164,47 +173,6 @@ export default function HrDirectoryPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Phones: one card per member instead of a wide table. */}
-          <div className="space-y-3 md:hidden">
-            {pageRows.map(({ m, ctx }) => (
-              <article key={m.id} onClick={() => navigate(`/people/${m.id}`)} className="cursor-pointer rounded-lg border border-line bg-surface/60 p-4">
-                <Link to={`/people/${m.id}`} className="flex items-center gap-3">
-                  <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold text-white', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
-                  <span className="min-w-0 flex-1 leading-tight">
-                    <span className="block truncate font-medium">{m.name || 'Unnamed'}</span>
-                    <span className="block truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
-                  </span>
-                </Link>
-                <div className="mt-3"><Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge></div>
-                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-                  <MobileField label="Contact" value={m.phone} />
-                  <MobileField label="Joining Date" value={m.dateOfJoining ? formatDate(m.dateOfJoining) : ''} />
-                  <MobileField label="Lab" value={ctx.lab?.name} />
-                  <MobileField label="Organization" value={ctx.organization} />
-                  <MobileField label="Project" value={ctx.project?.title} className="col-span-2" />
-                </dl>
-                <div className="mt-3 flex gap-2 border-t border-line pt-3" onClick={(e) => e.stopPropagation()}>
-                  <Link to={`/people/${m.id}`} className={buttonClasses('outline', 'flex-1 justify-center')}><Eye size={16} /> View</Link>
-                  <Link to={`/people/${m.id}/edit`} className={buttonClasses('outline', 'flex-1 justify-center')}><Pencil size={15} /> Edit</Link>
-                </div>
-              </article>
-            ))}
-            {pageRows.length === 0 && (
-              <div className="rounded-lg border border-line bg-surface/60"><EmptyState /></div>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-4 min-[1280px]:grid-cols-2 min-[1760px]:grid-cols-3">
-            {pageRows.map(({ m, ctx }) => <HrMemberCard key={m.id} member={m} ctx={ctx} />)}
-          </div>
-          {pageRows.length === 0 && (
-            <div className="rounded-lg border border-line bg-surface/60"><EmptyState /></div>
-          )}
-        </>
-      )}
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">Showing {from}–{to} of {filtered.length} HR members</p>
@@ -247,14 +215,5 @@ function PageBtn({ active, className, ...rest }: { active?: boolean } & React.Bu
       className={cn('grid h-9 min-w-9 place-items-center rounded-md border px-2 text-sm transition disabled:opacity-40', active ? 'border-primary bg-primary text-white' : 'border-line hover:bg-surface', className)}
       {...rest}
     />
-  );
-}
-
-function MobileField({ label, value, className }: { label: string; value?: string; className?: string }) {
-  return (
-    <div className={cn('min-w-0', className)}>
-      <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
-      <dd className="truncate font-medium" title={value}>{value || EMPTY_DISPLAY}</dd>
-    </div>
   );
 }

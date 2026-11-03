@@ -19,6 +19,7 @@ export function getFieldDisplay(field: FieldDef, values: HrFormValues, catalog: 
     case 'projectCodes': return findProject(catalog, raw)?.code ?? raw;
     case 'projectTitles': return findProject(catalog, raw)?.title ?? raw;
     case 'qualifications': return catalog?.qualifications.find((o) => o.value === raw)?.label ?? raw;
+    case 'commissions': return catalog?.commissions.find((o) => o.value === raw)?.label ?? raw;
     case 'organizations': return catalog?.organizations.find((o) => o.value === raw)?.label ?? raw;
     case 'yesNo': return YES_NO_OPTIONS.find((o) => o.value === raw)?.label ?? raw;
     default: break;
@@ -36,6 +37,7 @@ export interface MemberContext {
   lab?: Lab;
   theme?: Theme;
   project?: Project;
+  commission: string;
   organization: string;
 }
 
@@ -45,6 +47,7 @@ export function resolveMemberContext(member: HrMember, catalog: HrCatalog | null
     lab,
     theme: catalog?.themes.find((t) => t.id === (member.technologyTheme || lab?.themeId)),
     project: findProject(catalog, member.projectId),
+    commission: catalog?.commissions.find((o) => o.value === member.commission)?.label ?? '',
     organization: catalog?.organizations.find((o) => o.value === member.organization)?.label ?? '',
   };
 }

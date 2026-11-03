@@ -38,7 +38,14 @@ export function useHrMemberForm({ catalog, initial }: Args) {
   const [values, setValues] = useState<HrFormValues>(() => {
     if (!initial) return EMPTY_FORM_VALUES;
     const { id: _id, hrType: _type, ...rest } = initial;
-    return { ...EMPTY_FORM_VALUES, ...rest };
+    const merged = { ...EMPTY_FORM_VALUES, ...rest };
+    // Records that only carry a full `name` (older API data): split it so both name fields are filled when editing.
+    if (!merged.firstName && !merged.lastName && merged.name) {
+      const [first, ...others] = merged.name.trim().split(/\s+/);
+      merged.firstName = first;
+      merged.lastName = others.join(' ');
+    }
+    return merged;
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [stepIndex, setStepIndex] = useState(0);
@@ -46,14 +53,21 @@ export function useHrMemberForm({ catalog, initial }: Args) {
   const unlockAll = Boolean(initial); // editing: every step is reachable straight away
 
   const steps = useMemo(() => buildSteps(hrType), [hrType]);
-  const stepItems: StepItem[] = useMemo(() => [...steps.map(({ id, title, icon }) => ({ id, title, icon })), REVIEW_STEP], [steps]);
-  const isReview = stepIndex === stepItems.length - 1;
+  // Strategic HR is a single form: no stepper and no Review step. Contractual HR gets steps + Review.
+  const hasReview = hrType !== HR_TYPES.STRATEGIC;
+  const stepItems: StepItem[] = useMemo(
+    () => [...steps.map(({ id, title, icon }) => ({ id, title, icon })), ...(hasReview ? [REVIEW_STEP] : [])],
+    [steps, hasReview],
+  );
+  const isSingleStep = stepItems.length === 1;
+  const isReview = hasReview && stepIndex === stepItems.length - 1;
   const currentStep: FormStep | null = isReview ? null : steps[stepIndex];
 
   // ---- values & the Theme -> Lab -> Project cascade ----------------------------------------
   const setValue = useCallback((name: keyof HrFormValues, value: string) => {
     setValues((prev) => {
       const next = { ...prev, [name]: value };
+      if (name === 'commission') next.organization = '';
       if (name === 'technologyTheme') { next.lab = ''; next.projectId = ''; next.projectDuration = ''; }
       if (name === 'lab') { next.projectId = ''; next.projectDuration = ''; }
       if (name === 'projectId') {
@@ -90,7 +104,8 @@ export function useHrMemberForm({ catalog, initial }: Args) {
       case 'projectCodes': return activeProjects.map((p) => ({ value: p.id, label: p.code }));
       case 'projectTitles': return activeProjects.map((p) => ({ value: p.id, label: p.title }));
       case 'qualifications': return catalog.qualifications;
-      case 'organizations': return catalog.organizations;
+      case 'commissions': return catalog.commissions;
+      case 'organizations': return catalog.organizations.filter((o) => o.commissionId === values.commission);
       case 'yesNo': return YES_NO_OPTIONS;
       default: return [];
     }
@@ -102,13 +117,6 @@ export function useHrMemberForm({ catalog, initial }: Args) {
     if (field.dependsOn && optionsFor(field).length === 0) return field.emptyHint ?? field.placeholder;
     return field.placeholder;
   };
-
-  const projectHint = useMemo(() => {
-    const selectedLab = catalog?.labs.find((l) => l.id === values.lab);
-    if (!selectedLab) return null;
-    const count = (catalog?.projects ?? []).filter((p) => p.labId === selectedLab.id && isActiveProject(p)).length;
-    return `${count} active project${count === 1 ? '' : 's'} in ${selectedLab.name}`;
-  }, [catalog, values.lab]);
 
   // ---- validation (formats only - nothing is required) -------------------------------------
   const validateFields = (fields: FieldDef[]): FieldErrors => {
@@ -148,6 +156,7 @@ export function useHrMemberForm({ catalog, initial }: Args) {
   const buildPayload = (): HrMemberInput => {
     const payload: HrMemberInput = { ...EMPTY_FORM_VALUES, hrType };
     steps.flatMap(fieldsOf).forEach((f) => { payload[f.name] = values[f.name].trim(); });
+    payload.name = [payload.firstName, payload.lastName].filter(Boolean).join(' '); // full name = first + last
     return payload;
   };
 
@@ -155,7 +164,7 @@ export function useHrMemberForm({ catalog, initial }: Args) {
     hrType, setHrType, values, errors, setValue,
     steps, stepItems, stepIndex, maxStep: unlockAll ? stepItems.length - 1 : maxStep, currentStep, isReview,
     goNext, goPrev, goTo, validateAll, buildPayload,
-    optionsFor, isDisabled, placeholderFor, projectHint,
+    optionsFor, isDisabled, placeholderFor, isSingleStep,
   };
 }
 

@@ -3,6 +3,9 @@ export type ProjectStatus = 'initiated' | 'in-progress' | 'completed' | 'on-hold
 
 export interface SelectOption { value: string; label: string }
 
+/** An organization belongs to exactly one commission (Strategic HR: pick the commission first, then its organization). */
+export interface Organization extends SelectOption { commissionId: string }
+
 export interface Theme { id: string; name: string }
 export interface Lab { id: string; name: string; themeId: string; floor: number }
 export interface Project {
@@ -20,7 +23,8 @@ export interface HrCatalog {
   labs: Lab[];
   projects: Project[];
   qualifications: SelectOption[];
-  organizations: SelectOption[];
+  commissions: SelectOption[];
+  organizations: Organization[];
 }
 
 /**
@@ -28,11 +32,14 @@ export interface HrCatalog {
  * Dates are ISO `YYYY-MM-DD`; Yes/No selects hold 'yes' | 'no' | ''.
  */
 export interface HrFormValues {
-  name: string;               // RA Name / Strategic HR name
+  firstName: string;
+  lastName: string;
+  name: string;               // Full name = first + last. Derived on save (not a form field); used by the directory, search and view page.
   email: string;
   phone: string;              // Contact #
   qualification: string;
-  organization: string;       // Strategic HR only
+  commission: string;         // Strategic HR only - commission id
+  organization: string;       // Strategic HR only - must belong to the chosen commission
   technologyTheme: string;    // Theme id
   lab: string;                // Lab id
   projectId: string;          // Project id (Project Code + Project Title both edit this)
@@ -50,7 +57,7 @@ export type HrMemberInput = HrFormValues & { hrType: HrType };
 export type HrMember = HrMemberInput & { id: string };
 
 export const EMPTY_FORM_VALUES: HrFormValues = {
-  name: '', email: '', phone: '', qualification: '', organization: '',
+  firstName: '', lastName: '', name: '', email: '', phone: '', qualification: '', commission: '', organization: '',
   technologyTheme: '', lab: '', projectId: '', projectDuration: '',
   selected: '', loaIssued: '', joined: '', dateOfJoining: '',
   payPackage: '', contractDuration: '', remarks: '',

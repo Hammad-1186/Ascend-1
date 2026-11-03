@@ -79,7 +79,12 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
   };
 
   const handleSaveStep = () => save(() => setNotice('Saved. Continue now or finish later.'));
-  const handleSaveRecord = () => save(() => navigate('/people')); // back to the HR Directory
+  // Final save (Strategic HR: the only Save; Contractual HR: Save Record on Review). Goes back to the HR Directory
+  // table, which shows the success message.
+  const handleSaveRecord = () => save(() => navigate('/people', {
+    state: { notice: mode === 'edit' ? 'HR record updated successfully.' : 'HR record added successfully.' },
+  }));
+  const isFinalSave = form.isReview || form.isSingleStep;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-3 sm:px-6 sm:py-4">
@@ -95,9 +100,9 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
               </span>
             )}
             <Button variant="outline" onClick={() => navigate('/people')}>Cancel</Button>
-            {/* Save keeps what is filled so far (any step); on Review it becomes Save Record and returns to the directory. */}
-            <Button icon={Save} disabled={saving} onClick={form.isReview ? handleSaveRecord : handleSaveStep}>
-              {saving ? 'Saving…' : form.isReview ? 'Save Record' : 'Save'}
+            {/* Contractual: Save keeps what is filled so far; on Review it becomes Save Record. Strategic: always Save Record. */}
+            <Button icon={Save} disabled={saving} onClick={isFinalSave ? handleSaveRecord : handleSaveStep}>
+              {saving ? 'Saving…' : isFinalSave ? 'Save Record' : 'Save'}
             </Button>
           </>
         }

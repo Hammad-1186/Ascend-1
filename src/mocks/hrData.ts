@@ -1,5 +1,5 @@
 // STATIC DATA - same shapes the API should return (see src/types/hr.ts).
-import { EMPTY_FORM_VALUES, type HrCatalog, type HrMember, type Lab, type Project, type SelectOption, type Theme } from '../types/hr';
+import { EMPTY_FORM_VALUES, type HrCatalog, type HrMember, type Lab, type Organization, type Project, type SelectOption, type Theme } from '../types/hr';
 
 const opt = (label: string): SelectOption => ({ value: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'), label });
 
@@ -43,28 +43,47 @@ export const projectsMock: Project[] = [
   project('IMP-0302', 'Additive Manufacturing Qualification', '5.2', 'initiated', 24),
 ];
 
+export const commissionsMock: SelectOption[] = ['Commission A', 'Commission B', 'Commission C', 'Commission D'].map(opt);
+
+// Each organization belongs to one commission.
+const orgsIn = (commissionId: string, names: string[]): Organization[] => names.map((n) => ({ ...opt(n), commissionId }));
+export const organizationsMock: Organization[] = [
+  ...orgsIn('commission-a', ['Org-A', 'Org-B', 'Org-C']),
+  ...orgsIn('commission-b', ['Org-D', 'Org-E', 'Org-F']),
+  ...orgsIn('commission-c', ['Org-G', 'Org-H', 'Org-I']),
+  ...orgsIn('commission-d', ['Org-J', 'Org-K']),
+];
+
 export const catalogMock: HrCatalog = {
   themes: themesMock,
   labs: labsMock,
   projects: projectsMock,
   qualifications: ['PhD', 'MS / MPhil', 'BS / BE', 'Diploma'].map(opt),
-  organizations: ['Org-A', 'Org-B', 'Org-C', 'Org-D', 'Org-E', 'Org-F', 'Org-G', 'Org-H', 'Org-I', 'Org-J', 'Org-K'].map(opt),
+  commissions: commissionsMock,
+  organizations: organizationsMock,
 };
 
 const emailOf = (name: string) => `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@ascendlab.com`;
+
+/** Seed data is written with a full name; the form stores first + last separately. */
+const splitName = (full: string) => {
+  const [firstName, ...rest] = full.split(' ');
+  return { firstName, lastName: rest.join(' '), name: full };
+};
 
 const ra = (id: string, name: string, labNum: string, projectCode: string, o: Partial<HrMember>): HrMember => {
   const l = labsMock.find((x) => x.id === `lab-${labNum.replace('.', '-')}`)!;
   const p = projectsMock.find((x) => x.id === projectCode.toLowerCase())!;
   return {
-    ...EMPTY_FORM_VALUES, id, hrType: 'contractual', name, email: emailOf(name), qualification: 'ms-mphil',
+    ...EMPTY_FORM_VALUES, id, hrType: 'contractual', ...splitName(name), email: emailOf(name), qualification: 'ms-mphil',
     technologyTheme: l.themeId, lab: l.id, projectId: p.id, projectDuration: String(p.durationMonths),
     selected: 'yes', loaIssued: 'yes', joined: 'yes', contractDuration: '12', ...o,
   };
 };
 
 const strategic = (id: string, name: string, organization: string, o: Partial<HrMember>): HrMember => ({
-  ...EMPTY_FORM_VALUES, id, hrType: 'strategic', name, email: emailOf(name), organization, ...o,
+  ...EMPTY_FORM_VALUES, id, hrType: 'strategic', ...splitName(name), email: emailOf(name),
+  commission: organizationsMock.find((x) => x.value === organization)?.commissionId ?? '', organization, ...o,
 });
 
 export const membersSeed: HrMember[] = [
