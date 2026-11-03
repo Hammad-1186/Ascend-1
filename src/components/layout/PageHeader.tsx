@@ -1,36 +1,28 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, type LucideIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface Props {
+  /** Omit on top-level pages (the sidebar already navigates there). */
   backTo?: string;
   backLabel?: string;
-  icon?: LucideIcon;
   title: string;
-  subtitle?: ReactNode;
+  /** Right-hand corner, e.g. Cancel / Save. */
   actions?: ReactNode;
 }
 
-/** On phones the action buttons wrap onto their own line instead of squeezing the title. */
-export default function PageHeader({ backTo, backLabel, icon: Icon, title, subtitle, actions }: Props) {
+/** Plain title on the left, actions on the right. No icon, no sub-line. */
+export default function PageHeader({ backTo, backLabel, title, actions }: Props) {
   return (
     <header className="mb-3 border-b border-line pb-3">
       {backTo && (
-        <Link to={backTo} className="mb-1.5 inline-flex items-center gap-2 text-base text-muted hover:text-white">
+        <Link to={backTo} className="mb-1.5 inline-flex items-center gap-2 text-base text-muted hover:text-ink">
           <ArrowLeft size={16} /> {backLabel}
         </Link>
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <div className="flex min-w-0 flex-1 basis-56 items-center gap-3 sm:gap-4">
-          {Icon && (
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft ring-2 ring-primary/50 sm:h-12 sm:w-12"><Icon size={20} /></span>
-          )}
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-2xl font-bold leading-tight sm:text-3xl">{title}</h1>
-            {subtitle && <div className="hidden truncate text-sm uppercase tracking-wide text-muted sm:block">{subtitle}</div>}
-          </div>
-        </div>
-        {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <h1 className="min-w-0 flex-1 basis-40 truncate text-2xl font-bold leading-tight sm:text-3xl">{title}</h1>
+        {actions && <div className="flex flex-wrap items-center justify-end gap-3">{actions}</div>}
       </div>
     </header>
   );

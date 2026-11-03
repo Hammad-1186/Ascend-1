@@ -15,6 +15,8 @@ const config: Config = {
         line: token('border'),
         field: token('field'),
         'field-line': token('field-border'),
+        ink: token('text'),
+        success: token('success'),
         muted: token('muted'),
         danger: token('danger'),
         info: token('info'),

@@ -114,7 +114,7 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
       {/* 1. Who + the numbers that matter, readable at a glance */}
       <section className="rounded-xl border border-line bg-gradient-to-br from-primary-soft/70 via-surface/70 to-surface/50 p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-4 sm:gap-5">
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary text-xl font-bold ring-4 ring-primary/25 sm:h-20 sm:w-20 sm:text-2xl">
+          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary text-xl font-bold text-white ring-4 ring-primary/25 sm:h-20 sm:w-20 sm:text-2xl">
             {initialsOf(member.name)}
           </span>
           <div className="min-w-0 flex-1 basis-64">

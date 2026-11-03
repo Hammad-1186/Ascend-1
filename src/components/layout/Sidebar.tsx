@@ -28,7 +28,7 @@ function NavItem({ to, label, icon: Icon, collapsed, onNavigate }: { to: string;
           'mx-2.5 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
           isActive
             ? 'bg-gradient-to-r from-primary to-primary-2 font-medium text-white shadow-lg shadow-primary/30'
-            : 'text-muted hover:bg-white/5 hover:text-white',
+            : 'text-muted hover:bg-ink/5 hover:text-ink',
         )
       }
     >
@@ -87,9 +87,9 @@ export default function Sidebar({ collapsed: collapsedProp, onToggle, user, onLo
           <Logo />
           {!collapsed && <span className="flex-1 text-[15px] font-semibold leading-tight">ASCEND Lab<br />Systems</span>}
           {mobile ? (
-            <button type="button" onClick={onClose} aria-label="Close menu" className="grid h-9 w-9 place-items-center rounded-md text-muted hover:text-white"><X size={20} /></button>
+            <button type="button" onClick={onClose} aria-label="Close menu" className="grid h-9 w-9 place-items-center rounded-md text-muted hover:text-ink"><X size={20} /></button>
           ) : (
-            <button type="button" onClick={onToggle} aria-label="Toggle sidebar" className="text-muted hover:text-white">
+            <button type="button" onClick={onToggle} aria-label="Toggle sidebar" className="text-muted hover:text-ink">
               <ChevronsLeft size={16} className={cn(collapsed && 'rotate-180')} />
             </button>
           )}
@@ -109,7 +109,7 @@ export default function Sidebar({ collapsed: collapsedProp, onToggle, user, onLo
         <div className="space-y-3 p-3">
           <ThemeToggle collapsed={collapsed} />
           <div className={cn('flex items-center gap-2.5 px-1', collapsed && 'flex-col')}>
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold ring-2 ring-primary-2/60">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-white ring-2 ring-primary-2/60">
               {user.name.charAt(0).toUpperCase()}
             </span>
             {!collapsed && (
@@ -118,7 +118,7 @@ export default function Sidebar({ collapsed: collapsedProp, onToggle, user, onLo
                 <span className="mt-1 inline-block rounded-full bg-primary-soft px-2 text-[10px] font-semibold text-info">{user.role}</span>
               </div>
             )}
-            <button type="button" onClick={onLogout} aria-label="Log out" className="text-muted hover:text-white"><LogOut size={16} /></button>
+            <button type="button" onClick={onLogout} aria-label="Log out" className="text-muted hover:text-ink"><LogOut size={16} /></button>
           </div>
         </div>
       </aside>

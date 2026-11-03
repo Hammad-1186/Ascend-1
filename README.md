@@ -23,3 +23,10 @@ Latest changes
 - HR type badge colours live in HR_TYPE_TONE (hrFormConfig.ts): Strategic = solid blue, Contractual = outlined.
 - Text/inputs/buttons enlarged (html font-size 112.5% in styles/theme.css + bigger inputs). Change the 112.5% to resize everything.
 - vercel.json added so refreshing /people (or any route) works on Vercel.
+
+v4 changes
+- Light theme: tokens in src/styles/theme.css ([data-theme='light']); sun / monitor / moon switch in the sidebar remembers the choice (src/utils/theme.ts). Default is dark.
+- Text colour token `ink` (text-ink) replaces hard-coded white so both themes work. Use text-white only on solid blue/green backgrounds.
+- Headers have no icon and no sub-line; HR Directory has no back link.
+- Form: numbered left-aligned stepper (hidden on Review), Cancel + Save in the header (Save Record on Review), Previous / Next right after the last card, no "Step x of y", no icons inside fields or card titles.
+- Directory: any cell/row opens the member; full project title and email; grid cards open on click.

@@ -15,13 +15,13 @@ interface Props extends SelectHTMLAttributes<HTMLSelectElement> {
 export default function SelectInput({ icon: Icon, options = [], placeholder, value, className, ...rest }: Props) {
   return (
     <div className="relative">
-      {Icon && <Icon size={19} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white" />}
+      {Icon && <Icon size={19} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink" />}
       <select
         value={value}
         className={cn(
           'h-12 w-full appearance-none truncate rounded-md border border-field-line bg-field pr-10 text-base',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60',
-          value ? 'text-white' : 'text-muted',
+          value ? 'text-ink' : 'text-muted',
           Icon ? 'pl-11' : 'pl-3.5',
           className,
         )}
@@ -29,10 +29,10 @@ export default function SelectInput({ icon: Icon, options = [], placeholder, val
       >
         <option value="" className="bg-field text-muted">{placeholder}</option>
         {options.map((o) => (
-          <option key={o.value} value={o.value} className="bg-field text-white">{o.label}</option>
+          <option key={o.value} value={o.value} className="bg-field text-ink">{o.label}</option>
         ))}
       </select>
-      <ChevronDown size={19} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-white" />
+      <ChevronDown size={19} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-ink" />
     </div>
   );
 }

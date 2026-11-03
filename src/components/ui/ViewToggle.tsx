@@ -28,7 +28,7 @@ export default function ViewToggle<T extends string>({ value, onChange, options,
             onClick={() => onChange(v)}
             className={cn(
               'inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition',
-              active ? 'bg-primary text-white shadow-md shadow-primary/30' : 'text-muted hover:text-white',
+              active ? 'bg-primary text-white shadow-md shadow-primary/30' : 'text-muted hover:text-ink',
             )}
           >
             <Icon size={15} /> {label}

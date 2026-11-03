@@ -18,15 +18,36 @@
   --c-primary-soft: 11 42 94;
   --c-sidebar-from: 10 27 62;
   --c-sidebar-to: 7 18 43;
+  --c-text: 255 255 255;
+  --c-success: 52 211 153;
   color-scheme: dark;
 }
-/* TODO: add [data-theme='light'] { ... } overrides here when a light theme is needed. */
+
+/* Light theme: white cards on a pale blue page, dark slate text, same blue accent. */
+[data-theme='light'] {
+  --c-bg: 243 246 251;
+  --c-surface: 255 255 255;
+  --c-border: 219 227 238;
+  --c-field: 255 255 255;
+  --c-field-border: 196 207 222;
+  --c-muted: 100 116 139;
+  --c-danger: 220 38 38;
+  --c-info: 29 78 216;
+  --c-primary: 37 99 235;
+  --c-primary-2: 14 165 233;
+  --c-primary-soft: 219 234 254;
+  --c-sidebar-from: 250 252 255;
+  --c-sidebar-to: 238 243 250;
+  --c-text: 17 24 39;
+  --c-success: 5 150 105;
+  color-scheme: light;
+}
 
 @layer base {
   /* 112.5% root size: every rem-based size (text, inputs, buttons, spacing) grows ~12% for easier reading. */
   html { font-size: 112.5%; }
   html, body, #root { height: 100%; }
-  body { @apply bg-app font-sans text-white antialiased; }
+  body { @apply bg-app font-sans text-ink antialiased; }
 }
 @layer components {
   .app-bg {

@@ -81,8 +81,8 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
   const today = todayParts();
   const same = (a: DateParts | null, b: DateParts) => !!a && a.y === b.y && a.m === b.m && a.d === b.d;
 
-  const navBtn = 'grid h-8 w-8 place-items-center rounded-md text-muted hover:bg-primary-soft hover:text-white';
-  const selectCls = 'h-8 rounded-md border border-field-line bg-field px-2 text-sm text-white focus:border-primary focus:outline-none';
+  const navBtn = 'grid h-8 w-8 place-items-center rounded-md text-muted hover:bg-primary-soft hover:text-ink';
+  const selectCls = 'h-8 rounded-md border border-field-line bg-field px-2 text-sm text-ink focus:border-primary focus:outline-none';
 
   return (
     <>
@@ -94,20 +94,20 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
         aria-expanded={open}
         onClick={toggle}
         className={cn(
-          'relative flex h-12 w-full items-center rounded-md border border-field-line bg-field pl-11 pr-10 text-left text-base',
+          'relative flex h-12 w-full items-center rounded-md border border-field-line bg-field pl-3.5 pr-10 text-left text-base',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
           open && 'border-primary ring-1 ring-primary',
         )}
       >
-        <CalendarDays size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white" />
-        <span className={cn('truncate', value ? 'text-white' : 'text-muted')}>{value ? formatDate(value) : placeholder}</span>
+        {!value && <CalendarDays size={18} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted" />}
+        <span className={cn('truncate', value ? 'text-ink' : 'text-muted')}>{value ? formatDate(value) : placeholder}</span>
         {value && (
           <span
             role="button"
             tabIndex={-1}
             aria-label="Clear date"
             onClick={(e) => { e.stopPropagation(); onChange(''); }}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted hover:text-white"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted hover:text-ink"
           >
             <X size={14} />
           </span>
@@ -146,7 +146,7 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
                   onClick={() => pick(c)}
                   className={cn(
                     'mx-auto grid h-9 w-9 place-items-center rounded-full text-sm transition',
-                    isSel ? 'bg-primary font-semibold text-white' : c.inMonth ? 'text-white hover:bg-primary-soft' : 'text-muted/50 hover:bg-primary-soft',
+                    isSel ? 'bg-primary font-semibold text-white' : c.inMonth ? 'text-ink hover:bg-primary-soft' : 'text-muted/50 hover:bg-primary-soft',
                     !isSel && same(today, c) && 'ring-1 ring-primary-2',
                   )}
                 >
@@ -159,7 +159,7 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
           <div className="mt-2 flex items-center justify-between border-t border-line pt-2 text-xs">
             <button type="button" onClick={() => pick(today)} className="rounded px-2 py-1 font-medium text-info hover:bg-primary-soft">Today</button>
             <span className="truncate px-2 text-muted">{selected ? formatDate(value) : 'No date selected'}</span>
-            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="rounded px-2 py-1 text-muted hover:bg-primary-soft hover:text-white">Clear</button>
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="rounded px-2 py-1 text-muted hover:bg-primary-soft hover:text-ink">Clear</button>
           </div>
         </div>,
         document.body,

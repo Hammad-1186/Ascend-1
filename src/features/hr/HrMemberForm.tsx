@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react';
-import { CheckCircle2, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib';
 import SectionCard from '../../components/ui/SectionCard';
 import Button from '../../components/ui/Button';
@@ -18,20 +18,16 @@ interface Props {
   form: HrMemberFormApi;
   catalog: HrCatalog;
   saving: boolean;
-  /** Short confirmation after a mid-form save, e.g. "Saved". */
-  notice?: string;
-  /** Save button on every step: stores what is filled so far and stays on the step. */
-  onSaveStep: () => void;
-  /** Review step: save the finished record and leave the form. */
+  /** Pressing Enter on the Review step. (Save / Cancel buttons live in the page header.) */
   onSubmit: () => void;
-  onCancel: () => void;
 }
 
 /**
- * Multi-step form: one screen of grouped fields per step, a Save button on every step, and a Review step that is the
- * same summary as the View page. Presentational - all state lives in useHrMemberForm.
+ * Multi-step form. Stepper on top (left-aligned, hidden on Review), the step's cards, and Previous / Next right
+ * under the last card. The Review step is the same summary as the View page.
+ * Presentational - all state lives in useHrMemberForm; Save / Cancel are in the page header (HrMemberFormPage).
  */
-export default function HrMemberForm({ form, catalog, saving, notice, onSaveStep, onSubmit, onCancel }: Props) {
+export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props) {
   const { stepItems, stepIndex, isReview, currentStep } = form;
   const isFirst = stepIndex === 0;
 
@@ -46,7 +42,7 @@ export default function HrMemberForm({ form, catalog, saving, notice, onSaveStep
   const draft: HrMember = { id: 'draft', ...form.buildPayload() };
 
   const renderGroup = (g: FormGroup) => (
-    <SectionCard key={g.id} title={g.title} icon={g.icon} aside={g.showProjectHint ? form.projectHint : undefined}>
+    <SectionCard key={g.id} title={g.title} aside={g.showProjectHint ? form.projectHint : undefined}>
       {g.kind === 'hrType' ? (
         <RadioCardGroup<HrType> name="hrType" options={HR_TYPE_OPTIONS as Array<{ value: HrType; label: string }>} value={form.hrType} onChange={form.setHrType} />
       ) : (
@@ -71,35 +67,18 @@ export default function HrMemberForm({ form, catalog, saving, notice, onSaveStep
 
   return (
     <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-3">
-      <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />
+      {!isReview && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
 
-      {/* Only this area scrolls (and only if a step is taller than the screen); stepper and buttons stay in view. */}
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+      {/* Only this area scrolls, and only if a step is taller than the screen. */}
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
         {isReview ? <MemberOverview member={draft} catalog={catalog} /> : currentStep?.groups.map(renderGroup)}
-      </div>
 
-      <footer className="flex flex-wrap items-center gap-2 border-t border-line pt-3 sm:gap-3">
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        {notice && (
-          <span role="status" className="inline-flex items-center gap-1.5 text-base font-medium text-emerald-400">
-            <CheckCircle2 size={18} /> {notice}
-          </span>
-        )}
-        <span className="ml-auto hidden text-base text-muted md:inline">Step {stepIndex + 1} of {stepItems.length}</span>
-        <span className="ml-auto md:hidden" />
-        <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev} disabled={isFirst}>Previous</Button>
-        {isReview ? (
-          <Button type="submit" icon={Save} disabled={saving}>
-            <span className="sm:hidden">{saving ? 'Saving…' : 'Save'}</span>
-            <span className="hidden sm:inline">{saving ? 'Saving…' : 'Save Record'}</span>
-          </Button>
-        ) : (
-          <>
-            <Button variant="outline" icon={Save} onClick={onSaveStep} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
-            <Button type="submit" disabled={saving}>Next <ChevronRight size={16} /></Button>
-          </>
-        )}
-      </footer>
+        {/* Right after the last card, not pinned to the bottom of the screen. */}
+        <div className="flex items-center justify-between gap-3 pt-1">
+          {isFirst ? <span /> : <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev}>Previous</Button>}
+          {!isReview && <Button type="submit" disabled={saving}>Next <ChevronRight size={16} /></Button>}
+        </div>
+      </div>
     </form>
   );
 }

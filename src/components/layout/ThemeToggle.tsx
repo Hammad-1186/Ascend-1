@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Sun, Monitor, Moon, type LucideIcon } from 'lucide-react';
 import { cn } from '../../lib';
+import { applyMode, getStoredMode, type ThemeMode } from '../../utils/theme';
 
-type Mode = 'light' | 'system' | 'dark';
-const MODES: Array<{ id: Mode; icon: LucideIcon }> = [
+const MODES: Array<{ id: ThemeMode; icon: LucideIcon }> = [
   { id: 'light', icon: Sun },
   { id: 'system', icon: Monitor },
   { id: 'dark', icon: Moon },
 ];
 
 export default function ThemeToggle({ collapsed }: { collapsed: boolean }) {
-  const [mode, setMode] = useState<Mode>('system');
-  // Only the dark tokens exist today; add a light block in theme.css to activate it.
-  useEffect(() => { if (mode !== 'system') document.documentElement.dataset.theme = mode; }, [mode]);
+  const [mode, setMode] = useState<ThemeMode>(getStoredMode);
+
+  useEffect(() => {
+    applyMode(mode);
+    if (mode !== 'system') return;
+    // While on "system", follow the OS if it switches between light and dark.
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const onChange = () => applyMode('system');
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [mode]);
 
   return (
     <div className={cn('flex rounded-lg border border-line p-0.5', collapsed && 'flex-col')}>
@@ -21,8 +29,9 @@ export default function ThemeToggle({ collapsed }: { collapsed: boolean }) {
           key={id}
           type="button"
           aria-label={`${id} theme`}
+          aria-pressed={mode === id}
           onClick={() => setMode(id)}
-          className={cn('grid h-8 flex-1 place-items-center rounded-md text-muted transition', mode === id && 'bg-field text-white ring-1 ring-field-line')}
+          className={cn('grid h-8 flex-1 place-items-center rounded-md text-muted transition', mode === id && 'bg-field text-ink shadow-sm ring-1 ring-field-line')}
         >
           <Icon size={15} />
         </button>

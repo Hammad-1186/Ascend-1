@@ -11,53 +11,46 @@ interface Props {
   onSelect: (index: number) => void;
 }
 
-/** Horizontal progress tracker: done steps get a tick, the current step is highlighted, short connectors fill as you go. */
+/**
+ * Numbered step tabs, left-aligned: the current step is solid blue, finished steps get a tick.
+ * No icons and no connector lines; if the screen is narrow the tabs wrap onto a second row.
+ */
 export default function Stepper({ steps, current, maxReached, onSelect }: Props) {
   return (
-    <nav aria-label="Form progress" className="rounded-lg border border-line bg-surface/60 px-3 py-3.5 sm:px-5">
-      <ol className="flex items-center justify-center">
+    <nav aria-label="Form progress" className="rounded-lg border border-line bg-surface p-1">
+      <ol className="flex flex-wrap items-center justify-start gap-0.5">
         {steps.map((s, i) => {
           const done = i < current;
           const active = i === current;
           const clickable = i <= maxReached;
-          const Icon = s.icon;
           return (
-            <li key={s.id} className="flex min-w-0 items-center">
+            <li key={s.id}>
               <button
                 type="button"
                 disabled={!clickable}
                 onClick={() => onSelect(i)}
                 aria-current={active ? 'step' : undefined}
-                className={cn('flex min-w-0 items-center gap-2.5 text-left', clickable ? 'cursor-pointer' : 'cursor-not-allowed')}
+                className={cn(
+                  'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2.5 text-base font-semibold transition',
+                  active ? 'bg-primary text-white' : 'text-muted',
+                  !active && clickable && 'hover:bg-ink/5 hover:text-ink',
+                  !clickable && 'cursor-not-allowed',
+                )}
               >
                 <span
                   className={cn(
-                    'grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 text-base font-semibold transition sm:h-12 sm:w-12',
-                    done && 'border-primary bg-primary text-white',
-                    active && 'border-primary bg-primary-soft text-white ring-4 ring-primary/25',
-                    !done && !active && 'border-field-line bg-field text-muted',
+                    'grid h-6 w-6 shrink-0 place-items-center rounded text-sm font-bold',
+                    active ? 'bg-white/20 text-white' : done ? 'bg-primary text-white' : 'bg-ink/10 text-muted',
                   )}
                 >
-                  {done ? <Check size={20} /> : <Icon size={20} />}
+                  {done ? <Check size={14} /> : i + 1}
                 </span>
-                <span className={cn('hidden min-w-0 leading-tight', active ? 'lg:block' : 'min-[1400px]:block')}>
-                  <span className="block text-xs font-medium uppercase tracking-wide text-muted">Step {i + 1}</span>
-                  <span className={cn('block max-w-[8rem] text-base font-semibold', active || done ? 'text-white' : 'text-muted')}>{s.title}</span>
-                </span>
+                {s.title}
               </button>
-              {i < steps.length - 1 && (
-                // Short connector (was a long stretched line): fixed width so the steps sit close together.
-                <span className="mx-1.5 h-0.5 w-5 shrink-0 rounded bg-field-line sm:w-8 lg:mx-1.5 lg:w-4">
-                  <span className={cn('block h-full rounded bg-primary transition-all duration-300', done ? 'w-full' : 'w-0')} />
-                </span>
-              )}
             </li>
           );
         })}
       </ol>
-      <p className="mt-2.5 truncate text-center text-base font-medium lg:hidden">
-        <span className="text-muted">Step {current + 1} of {steps.length} · </span>{steps[current]?.title}
-      </p>
     </nav>
   );
 }

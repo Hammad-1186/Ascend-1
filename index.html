@@ -6,6 +6,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>ASCEND Lab Systems</title>
+    <!-- Apply the saved theme before the first paint so there is no dark/light flash. -->
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem('ascend-theme') || 'dark';
+          var t = m === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : m;
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>

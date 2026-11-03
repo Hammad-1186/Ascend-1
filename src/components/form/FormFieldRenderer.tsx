@@ -24,7 +24,7 @@ export default function FormFieldRenderer({ field, value, error, options, disabl
   let input;
   switch (field.component) {
     case 'select':
-      input = <SelectInput id={field.id} name={field.name} icon={field.icon} options={options} placeholder={placeholder} value={value} disabled={disabled} onChange={(e) => set(e.target.value)} />;
+      input = <SelectInput id={field.id} name={field.name} options={options} placeholder={placeholder} value={value} disabled={disabled} onChange={(e) => set(e.target.value)} />;
       break;
     case 'date':
       input = <DatePicker id={field.id} value={value} placeholder={placeholder} onChange={set} />;
@@ -33,7 +33,7 @@ export default function FormFieldRenderer({ field, value, error, options, disabl
       input = <TextAreaInput id={field.id} name={field.name} placeholder={placeholder} value={value} maxLength={field.maxLength} onChange={(e) => set(e.target.value)} />;
       break;
     default:
-      input = <TextInput id={field.id} name={field.name} type={field.inputType ?? 'text'} min={field.inputType === 'number' ? 0 : undefined} icon={field.icon} suffix={field.suffix} placeholder={placeholder} value={value} onChange={(e) => set(e.target.value)} />;
+      input = <TextInput id={field.id} name={field.name} type={field.inputType ?? 'text'} min={field.inputType === 'number' ? 0 : undefined} suffix={field.suffix} placeholder={placeholder} value={value} onChange={(e) => set(e.target.value)} />;
   }
 
   return <FormField label={field.label} htmlFor={field.id} error={error} className={className}>{input}</FormField>;

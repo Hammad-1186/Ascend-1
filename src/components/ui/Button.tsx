@@ -4,7 +4,7 @@ import { cn } from '../../lib';
 
 const VARIANTS = {
   primary: 'bg-primary text-white hover:bg-primary/90 disabled:opacity-60',
-  outline: 'border border-line bg-transparent text-white hover:bg-surface disabled:opacity-40',
+  outline: 'border border-line bg-transparent text-ink hover:bg-surface disabled:opacity-40',
 } as const;
 
 export type ButtonVariant = keyof typeof VARIANTS;

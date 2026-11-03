@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Briefcase, ChevronLeft, ChevronRight, Eye, LayoutGrid, Pencil, Plus, RotateCcw, Search, Table2, UserSearch, Users, UsersRound } from 'lucide-react';
 import { cn } from '../../lib';
 import PageHeader from '../../components/layout/PageHeader';
@@ -27,6 +27,7 @@ interface Filters { query: string; type: '' | HrType; theme: string; lab: string
 const NO_FILTERS: Filters = { query: '', type: '', theme: '', lab: '' };
 
 export default function HrDirectoryPage() {
+  const navigate = useNavigate();
   const { catalog } = useHrCatalog();
   const [members, setMembers] = useState<HrMember[]>([]);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
@@ -87,18 +88,14 @@ export default function HrDirectoryPage() {
   return (
     <div className="px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
-        backTo="/dashboard"
-        backLabel="Back to Dashboard"
-        icon={Users}
         title="HR Directory"
-        subtitle="Manage and review HR members"
         actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR</Link>}
       />
 
       <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
-        <StatCard icon={UsersRound} label="Total HR Members" value={counts.total} tone="bg-primary-soft" />
-        <StatCard icon={Briefcase} label="Contractual HR (RA)" value={counts.contractual} tone="bg-primary-soft" />
-        <StatCard icon={UsersRound} label="Strategic HR" value={counts.strategic} tone="bg-emerald-600" />
+        <StatCard icon={UsersRound} label="Total HR Members" value={counts.total} tone="bg-primary-soft text-info" />
+        <StatCard icon={Briefcase} label="Contractual HR (RA)" value={counts.contractual} tone="bg-primary-soft text-info" />
+        <StatCard icon={UsersRound} label="Strategic HR" value={counts.strategic} tone="bg-emerald-600 text-white" />
       </div>
 
       <div className="mb-3 grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.8fr_1fr_1fr_1.2fr_auto]">
@@ -108,7 +105,7 @@ export default function HrDirectoryPage() {
             value={filters.query}
             onChange={(e) => setFilter({ query: e.target.value })}
             placeholder="Search"
-            className="h-11 w-full rounded-md border border-field-line bg-field pl-10 pr-3 text-base text-white placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-11 w-full rounded-md border border-field-line bg-field pl-10 pr-3 text-base text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
         <SelectInput aria-label="HR Type" placeholder="All HR Types" options={HR_TYPE_OPTIONS} value={filters.type} onChange={(e) => setFilter({ type: e.target.value as Filters['type'] })} />
@@ -126,37 +123,37 @@ export default function HrDirectoryPage() {
       {view === 'table' ? (
         <>
           <div className="hidden overflow-x-auto rounded-lg border border-line bg-surface/60 md:block">
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wide">
-                  <th className="w-12 px-3 py-3"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
-                  {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="px-2.5 py-3">{h}</th>)}
-                  <th className="px-2.5 py-3 text-center">Actions</th>
+                  <th className="w-10 px-3 py-3"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
+                  {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="px-2 py-3">{h}</th>)}
+                  <th className="px-2 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map(({ m, ctx }) => (
-                  <tr key={m.id} className="border-b border-line/60 last:border-0 hover:bg-white/[0.03]">
-                    <td className="px-3 py-3"><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
-                    <td className="px-2.5 py-3">
-                      <Link to={`/people/${m.id}`} className="flex items-center gap-3">
-                        <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
+                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className="cursor-pointer border-b border-line/60 last:border-0 hover:bg-ink/[0.03]">
+                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
+                    <td className="px-2 py-3">
+                      <Link to={`/people/${m.id}`} className="flex items-center gap-2.5">
+                        <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
                         <span className="min-w-0 leading-tight">
-                          <span className="block max-w-[150px] truncate font-medium">{m.name || 'Unnamed'}</span>
-                          <span className="block max-w-[150px] truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
+                          <span className="block whitespace-nowrap font-medium">{m.name || 'Unnamed'}</span>
+                          <span className="block whitespace-nowrap text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
                         </span>
                       </Link>
                     </td>
-                    <td className="whitespace-nowrap px-2.5 py-3">{m.phone || EMPTY_DISPLAY}</td>
-                    <td className="whitespace-nowrap px-2.5 py-3">{ctx.lab?.name ?? EMPTY_DISPLAY}</td>
-                    <td className="px-2.5 py-3"><span className="block max-w-[150px] truncate" title={ctx.project?.title}>{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
-                    <td className="whitespace-nowrap px-2.5 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
-                    <td className="whitespace-nowrap px-2.5 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
-                    <td className="px-2.5 py-3"><Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge></td>
-                    <td className="px-2.5 py-3">
+                    <td className="whitespace-nowrap px-2 py-3">{m.phone || EMPTY_DISPLAY}</td>
+                    <td className="whitespace-nowrap px-2 py-3">{ctx.lab?.name ?? EMPTY_DISPLAY}</td>
+                    <td className="px-2 py-3"><span className="block min-w-[150px] max-w-[230px]">{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
+                    <td className="whitespace-nowrap px-2 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
+                    <td className="whitespace-nowrap px-2 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
+                    <td className="px-2 py-3"><Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge></td>
+                    <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-4">
-                        <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-white hover:text-info"><Eye size={18} /></Link>
-                        <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="text-white hover:text-info"><Pencil size={17} /></Link>
+                        <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-ink hover:text-info"><Eye size={18} /></Link>
+                        <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="text-ink hover:text-info"><Pencil size={17} /></Link>
                       </div>
                     </td>
                   </tr>
@@ -171,9 +168,9 @@ export default function HrDirectoryPage() {
           {/* Phones: one card per member instead of a wide table. */}
           <div className="space-y-3 md:hidden">
             {pageRows.map(({ m, ctx }) => (
-              <article key={m.id} className="rounded-lg border border-line bg-surface/60 p-4">
+              <article key={m.id} onClick={() => navigate(`/people/${m.id}`)} className="cursor-pointer rounded-lg border border-line bg-surface/60 p-4">
                 <Link to={`/people/${m.id}`} className="flex items-center gap-3">
-                  <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
+                  <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold text-white', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
                   <span className="min-w-0 flex-1 leading-tight">
                     <span className="block truncate font-medium">{m.name || 'Unnamed'}</span>
                     <span className="block truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
@@ -187,7 +184,7 @@ export default function HrDirectoryPage() {
                   <MobileField label="Organization" value={ctx.organization} />
                   <MobileField label="Project" value={ctx.project?.title} className="col-span-2" />
                 </dl>
-                <div className="mt-3 flex gap-2 border-t border-line pt-3">
+                <div className="mt-3 flex gap-2 border-t border-line pt-3" onClick={(e) => e.stopPropagation()}>
                   <Link to={`/people/${m.id}`} className={buttonClasses('outline', 'flex-1 justify-center')}><Eye size={16} /> View</Link>
                   <Link to={`/people/${m.id}/edit`} className={buttonClasses('outline', 'flex-1 justify-center')}><Pencil size={15} /> Edit</Link>
                 </div>

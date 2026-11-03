@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { CheckCircle2, Save } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
-import { buttonClasses } from '../../components/ui/Button';
+import Button, { buttonClasses } from '../../components/ui/Button';
 import HrMemberForm from './HrMemberForm';
 import { useHrMemberForm } from './useHrMemberForm';
 import { useHrCatalog } from './useHrCatalog';
@@ -86,12 +86,24 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
-        icon={User}
         title={mode === 'edit' ? 'Edit HR' : 'Add HR'}
-        subtitle="ASCEND LAB SYSTEMS - HR MANAGEMENT"
+        actions={
+          <>
+            {notice && (
+              <span role="status" className="inline-flex items-center gap-1.5 text-base font-medium text-success">
+                <CheckCircle2 size={18} /> {notice}
+              </span>
+            )}
+            <Button variant="outline" onClick={() => navigate('/people')}>Cancel</Button>
+            {/* Save keeps what is filled so far (any step); on Review it becomes Save Record and returns to the directory. */}
+            <Button icon={Save} disabled={saving} onClick={form.isReview ? handleSaveRecord : handleSaveStep}>
+              {saving ? 'Saving…' : form.isReview ? 'Save Record' : 'Save'}
+            </Button>
+          </>
+        }
       />
       {submitError && <p className="mb-2 text-base text-danger">{submitError}</p>}
-      <HrMemberForm form={form} catalog={catalog} saving={saving} notice={notice} onSaveStep={handleSaveStep} onSubmit={handleSaveRecord} onCancel={() => navigate('/people')} />
+      <HrMemberForm form={form} catalog={catalog} saving={saving} onSubmit={handleSaveRecord} />
     </div>
   );
 }

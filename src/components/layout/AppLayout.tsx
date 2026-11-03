@@ -19,7 +19,7 @@ export default function AppLayout() {
     <div className="app-bg flex h-full flex-col md:flex-row">
       {isMobile && (
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-sidebar-from px-4">
-          <button type="button" onClick={() => setDrawerOpen(true)} aria-label="Open menu" aria-expanded={drawerOpen} className="grid h-9 w-9 place-items-center rounded-md text-white hover:bg-white/10">
+          <button type="button" onClick={() => setDrawerOpen(true)} aria-label="Open menu" aria-expanded={drawerOpen} className="grid h-9 w-9 place-items-center rounded-md text-ink hover:bg-white/10">
             <Menu size={22} />
           </button>
           <Logo className="h-7 w-7" />
