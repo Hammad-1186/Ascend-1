@@ -17,17 +17,17 @@ interface Props {
 /** Bordered card with an optional icon + heading header. */
 export default function SectionCard({ title, icon: Icon, badge, badgeTone = 'solid', aside, children, className }: Props) {
   return (
-    <section className={cn('rounded-lg border border-line bg-surface/60 p-4', className)}>
+    <section className={cn('rounded-lg border border-line bg-surface/60 p-5', className)}>
       {title && (
-        <header className="mb-3 flex items-center gap-2.5">
+        <header className="mb-4 flex items-center gap-3">
           {Icon && (
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-white ring-1 ring-primary/40">
-              <Icon size={16} />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-white ring-1 ring-primary/40">
+              <Icon size={19} />
             </span>
           )}
-          <h2 className="truncate text-base font-semibold">{title}</h2>
+          <h2 className="truncate text-lg font-semibold">{title}</h2>
           {badge && <Badge tone={badgeTone}>{badge}</Badge>}
-          {aside && <div className="ml-auto min-w-0 truncate text-xs text-info">{aside}</div>}
+          {aside && <div className="ml-auto min-w-0 truncate text-sm text-info">{aside}</div>}
         </header>
       )}
       {children}

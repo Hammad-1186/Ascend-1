@@ -11,7 +11,7 @@ export type ButtonVariant = keyof typeof VARIANTS;
 
 /** Class string so <Link> and <button> can look identical. */
 export const buttonClasses = (variant: ButtonVariant = 'primary', className?: string) =>
-  cn('inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm sm:px-5 font-medium transition disabled:cursor-not-allowed', VARIANTS[variant], className);
+  cn('inline-flex items-center gap-2 rounded-lg px-4 py-3 text-base sm:px-6 font-medium transition disabled:cursor-not-allowed', VARIANTS[variant], className);
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;

@@ -10,13 +10,13 @@ export default function TextAreaInput({ className, value, maxLength, ...rest }: 
         value={value}
         maxLength={maxLength}
         className={cn(
-          'w-full resize-none rounded-md border border-field-line bg-field px-3 py-2 text-sm text-white placeholder:text-muted',
+          'w-full resize-none rounded-md border border-field-line bg-field px-3.5 py-2.5 text-base text-white placeholder:text-muted',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
           className,
         )}
         {...rest}
       />
-      {maxLength && <span className="pointer-events-none absolute bottom-1.5 right-3 text-[11px] text-muted">{String(value ?? '').length}/{maxLength}</span>}
+      {maxLength && <span className="pointer-events-none absolute bottom-1.5 right-3 text-xs text-muted">{String(value ?? '').length}/{maxLength}</span>}
     </div>
   );
 }

@@ -94,7 +94,7 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
         aria-expanded={open}
         onClick={toggle}
         className={cn(
-          'relative flex h-10 w-full items-center rounded-md border border-field-line bg-field pl-10 pr-9 text-left text-sm',
+          'relative flex h-12 w-full items-center rounded-md border border-field-line bg-field pl-11 pr-10 text-left text-base',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
           open && 'border-primary ring-1 ring-primary',
         )}
@@ -133,7 +133,7 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
             <button type="button" aria-label="Next month" onClick={() => shiftMonth(1)} className={navBtn}><ChevronRight size={16} /></button>
           </div>
 
-          <div className="grid grid-cols-7 text-center text-[11px] font-medium uppercase text-muted">
+          <div className="grid grid-cols-7 text-center text-xs font-medium uppercase text-muted">
             {WEEKDAYS.map((d) => <span key={d} className="py-1">{d}</span>)}
           </div>
           <div className="grid grid-cols-7 gap-y-0.5">

@@ -10,7 +10,7 @@ import Logo from './Logo';
 function SectionLabel({ children, collapsed }: { children: ReactNode; collapsed: boolean }) {
   if (collapsed) return <div className="mx-4 mt-4 h-px bg-line" />;
   return (
-    <div className="flex items-center gap-2 px-5 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+    <div className="flex items-center gap-2 px-5 pb-1 pt-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
       <span>{children}</span>
       <span className="h-px flex-1 bg-line" />
     </div>

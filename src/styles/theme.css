@@ -23,6 +23,8 @@
 /* TODO: add [data-theme='light'] { ... } overrides here when a light theme is needed. */
 
 @layer base {
+  /* 112.5% root size: every rem-based size (text, inputs, buttons, spacing) grows ~12% for easier reading. */
+  html { font-size: 112.5%; }
   html, body, #root { height: 100%; }
   body { @apply bg-app font-sans text-white antialiased; }
 }

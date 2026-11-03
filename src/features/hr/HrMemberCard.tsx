@@ -4,7 +4,7 @@ import { cn } from '../../lib';
 import Badge from '../../components/ui/Badge';
 import { buttonClasses } from '../../components/ui/Button';
 import { EMPTY_DISPLAY, avatarColor, initialsOf, type MemberContext } from './hrFormat';
-import { hrTypeLabel } from './hrFormConfig';
+import { HR_TYPE_TONE, hrTypeLabel } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember } from '../../types/hr';
 
@@ -42,7 +42,7 @@ export default function HrMemberCard({ member: m, ctx }: HrMemberCardProps) {
             <span className="block truncate text-xs text-muted" title={m.email}>{m.email || EMPTY_DISPLAY}</span>
           </span>
         </Link>
-        <Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge>
+        <Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge>
       </div>
 
       <dl className="mt-4 flex flex-1 gap-3">

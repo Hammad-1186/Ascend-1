@@ -15,13 +15,13 @@ export default function FormField({ label, htmlFor, required, error, children, c
   return (
     <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       {label && (
-        <label htmlFor={htmlFor} title={label} className="truncate text-sm font-medium">
+        <label htmlFor={htmlFor} title={label} className="truncate text-base font-medium">
           {label}
           {required && <span className="ml-1 text-danger">*</span>}
         </label>
       )}
       {children}
-      {error && <p className="truncate text-xs text-danger" title={error}>{error}</p>}
+      {error && <p className="truncate text-sm text-danger" title={error}>{error}</p>}
     </div>
   );
 }

@@ -50,35 +50,48 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
   const form = useHrMemberForm({ catalog, initial: member });
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [notice, setNotice] = useState('');
+  // Once the first save has happened, every later save updates that record instead of creating a duplicate.
+  const [savedId, setSavedId] = useState<string | undefined>(member?.id);
 
-  const handleSave = async () => {
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(''), 3500);
+    return () => clearTimeout(t);
+  }, [notice]);
+
+  /** Validate formats, store everything filled so far, then run `after`. */
+  const save = async (after: () => void) => {
     if (!form.validateAll()) return;
     setSaving(true);
     setSubmitError('');
+    setNotice('');
     try {
       const payload = form.buildPayload();
-      const saved = mode === 'edit' && member ? await hrService.updateMember(member.id, payload) : await hrService.createMember(payload);
-      navigate(`/people/${saved.id}`);
+      const saved = savedId ? await hrService.updateMember(savedId, payload) : await hrService.createMember(payload);
+      setSavedId(saved.id);
+      after();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
       setSaving(false);
     }
   };
 
-  const backTo = member ? `/people/${member.id}` : '/people';
+  const handleSaveStep = () => save(() => setNotice('Saved. Continue now or finish later.'));
+  const handleSaveRecord = () => save(() => navigate('/people')); // back to the HR Directory
 
   return (
-    // h-full + overflow-hidden: the page itself never scrolls either.
     <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
         icon={User}
-        title={mode === 'edit' ? 'Edit HR Member' : 'Add HR Member'}
+        title={mode === 'edit' ? 'Edit HR' : 'Add HR'}
         subtitle="ASCEND LAB SYSTEMS - HR MANAGEMENT"
       />
-      {submitError && <p className="mb-2 text-sm text-danger">{submitError}</p>}
-      <HrMemberForm form={form} catalog={catalog} mode={mode} saving={saving} onSubmit={handleSave} onCancel={() => navigate(backTo)} />
+      {submitError && <p className="mb-2 text-base text-danger">{submitError}</p>}
+      <HrMemberForm form={form} catalog={catalog} saving={saving} notice={notice} onSaveStep={handleSaveStep} onSubmit={handleSaveRecord} onCancel={() => navigate('/people')} />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import HrMemberCard from './HrMemberCard';
 import { useHrCatalog } from './useHrCatalog';
 import { hrService } from './hrService';
 import { EMPTY_DISPLAY, avatarColor, initialsOf, resolveMemberContext } from './hrFormat';
-import { HR_TYPE_OPTIONS, hrTypeLabel } from './hrFormConfig';
+import { HR_TYPE_OPTIONS, HR_TYPE_TONE, hrTypeLabel } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember, HrType } from '../../types/hr';
 
@@ -20,8 +20,8 @@ const VIEW_OPTIONS: ViewToggleOption<ViewMode>[] = [
   { value: 'table', label: 'Table View', icon: Table2 },
   { value: 'grid', label: 'Grid View', icon: LayoutGrid },
 ];
-// Grid shows 3 cards per row, so 6 per page keeps every row full.
-const PAGE_SIZE: Record<ViewMode, number> = { table: 10, grid: 8 };
+// Grid shows 1, 2 or 3 cards per row depending on width, so 6 per page keeps every row full.
+const PAGE_SIZE: Record<ViewMode, number> = { table: 5, grid: 6 };
 
 interface Filters { query: string; type: '' | HrType; theme: string; lab: string }
 const NO_FILTERS: Filters = { query: '', type: '', theme: '', lab: '' };
@@ -92,7 +92,7 @@ export default function HrDirectoryPage() {
         icon={Users}
         title="HR Directory"
         subtitle="Manage and review HR members"
-        actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR Member</Link>}
+        actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR</Link>}
       />
 
       <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
@@ -107,8 +107,8 @@ export default function HrDirectoryPage() {
           <input
             value={filters.query}
             onChange={(e) => setFilter({ query: e.target.value })}
-            placeholder="Search by name or email..."
-            className="h-10 w-full rounded-md border border-field-line bg-field pl-10 pr-3 text-sm text-white placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder="Search"
+            className="h-11 w-full rounded-md border border-field-line bg-field pl-10 pr-3 text-base text-white placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
         <SelectInput aria-label="HR Type" placeholder="All HR Types" options={HR_TYPE_OPTIONS} value={filters.type} onChange={(e) => setFilter({ type: e.target.value as Filters['type'] })} />
@@ -152,7 +152,7 @@ export default function HrDirectoryPage() {
                     <td className="px-2.5 py-3"><span className="block max-w-[150px] truncate" title={ctx.project?.title}>{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
                     <td className="whitespace-nowrap px-2.5 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
                     <td className="whitespace-nowrap px-2.5 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
-                    <td className="px-2.5 py-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></td>
+                    <td className="px-2.5 py-3"><Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge></td>
                     <td className="px-2.5 py-3">
                       <div className="flex items-center justify-center gap-4">
                         <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-white hover:text-info"><Eye size={18} /></Link>
@@ -179,7 +179,7 @@ export default function HrDirectoryPage() {
                     <span className="block truncate text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
                   </span>
                 </Link>
-                <div className="mt-3"><Badge tone={m.hrType === 'contractual' ? 'solid' : 'success'}>{hrTypeLabel(m.hrType)}</Badge></div>
+                <div className="mt-3"><Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge></div>
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
                   <MobileField label="Contact" value={m.phone} />
                   <MobileField label="Joining Date" value={m.dateOfJoining ? formatDate(m.dateOfJoining) : ''} />
@@ -200,7 +200,7 @@ export default function HrDirectoryPage() {
         </>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 min-[1280px]:grid-cols-2 min-[1760px]:grid-cols-3">
             {pageRows.map(({ m, ctx }) => <HrMemberCard key={m.id} member={m} ctx={ctx} />)}
           </div>
           {pageRows.length === 0 && (

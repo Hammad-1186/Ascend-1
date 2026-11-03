@@ -2,6 +2,7 @@ import {
   User, Mail, Phone, GraduationCap, Building2, Settings, FlaskConical, FolderOpen, Hash, Clock, CheckCircle2, FileCheck2,
   UserCheck, CalendarDays, Banknote, CalendarClock, MessageSquareText, ClipboardCheck, Users, Layers, type LucideIcon,
 } from 'lucide-react';
+import type { BadgeTone } from '../../components/ui/Badge';
 import type { HrFormValues, HrType, ProjectStatus, SelectOption } from '../../types/hr';
 
 export const HR_TYPES = { CONTRACTUAL: 'contractual', STRATEGIC: 'strategic' } as const satisfies Record<string, HrType>;
@@ -10,6 +11,9 @@ export const HR_TYPE_OPTIONS: SelectOption[] = [
   { value: HR_TYPES.CONTRACTUAL, label: 'Contractual HR (RA)' },
   { value: HR_TYPES.STRATEGIC, label: 'Strategic HR' },
 ];
+/** Badge colour per HR type - change it here and every screen follows. */
+export const HR_TYPE_TONE: Record<HrType, BadgeTone> = { strategic: 'solid', contractual: 'soft' };
+
 export const hrTypeLabel = (t: HrType): string => HR_TYPE_OPTIONS.find((o) => o.value === t)?.label ?? t;
 
 export const YES_NO_OPTIONS: SelectOption[] = [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }];
