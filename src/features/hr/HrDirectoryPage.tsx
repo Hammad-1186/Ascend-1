@@ -124,8 +124,8 @@ export default function HrDirectoryPage() {
           />
         </div>
         <SelectInput aria-label="HR Type" placeholder="All HR Types" options={HR_TYPE_OPTIONS} value={filters.type} onChange={(e) => setFilter({ type: e.target.value as Filters['type'] })} />
-        <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
         <SelectInput aria-label="Technology Theme" placeholder="All Themes" options={themeOptions} value={filters.theme} onChange={(e) => setFilter({ theme: e.target.value, lab: '' })} />
+        <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
         <button type="button" onClick={() => { setFilters(NO_FILTERS); setPage(1); }} disabled={!hasFilters} className="col-span-2 inline-flex items-center gap-2 justify-self-end text-sm text-info lg:col-span-1 hover:underline disabled:opacity-40 disabled:no-underline">
           <RotateCcw size={15} /> Clear Filters
         </button>
