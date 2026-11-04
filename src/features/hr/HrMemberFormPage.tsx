@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import Button, { buttonClasses } from '../../components/ui/Button';
 import HrMemberForm from './HrMemberForm';
@@ -50,22 +50,14 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
   const form = useHrMemberForm({ catalog, initial: member });
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [notice, setNotice] = useState('');
   // Once the first save has happened, every later save updates that record instead of creating a duplicate.
   const [savedId, setSavedId] = useState<string | undefined>(member?.id);
-
-  useEffect(() => {
-    if (!notice) return;
-    const t = setTimeout(() => setNotice(''), 3500);
-    return () => clearTimeout(t);
-  }, [notice]);
 
   /** Validate formats, store everything filled so far, then run `after`. */
   const save = async (after: () => void) => {
     if (!form.validateAll()) return;
     setSaving(true);
     setSubmitError('');
-    setNotice('');
     try {
       const payload = form.buildPayload();
       const saved = savedId ? await hrService.updateMember(savedId, payload) : await hrService.createMember(payload);
@@ -78,10 +70,9 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
     }
   };
 
-  const handleSaveStep = () => save(() => setNotice('Saved. Continue now or finish later.'));
-  // Final save (Strategic HR: the only Save; Contractual HR: Save Record on Review). Goes back to the HR Directory
-  // table, which shows the success message.
-  const handleSaveRecord = () => save(() => navigate('/people', {
+  // Save works on ANY step: whatever is filled so far is stored right away, then we go back to the HR Directory
+  // table where the record is listed and the success message is shown. The full details can be completed later via Edit.
+  const handleSave = () => save(() => navigate('/people', {
     state: { notice: mode === 'edit' ? 'HR record updated successfully.' : 'HR record added successfully.' },
   }));
   const isFinalSave = form.isReview || form.isSingleStep;
@@ -91,24 +82,19 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
-        title={mode === 'edit' ? 'Edit HR' : 'Add HR'}
+        title={mode === 'edit' ? 'Edit' : 'Add'}
         actions={
           <>
-            {notice && (
-              <span role="status" className="inline-flex items-center gap-1.5 text-base font-medium text-success">
-                <CheckCircle2 size={18} /> {notice}
-              </span>
-            )}
             <Button variant="outline" onClick={() => navigate('/people')}>Cancel</Button>
-            {/* Contractual: Save keeps what is filled so far; on Review it becomes Save Record. Strategic: always Save Record. */}
-            <Button icon={Save} disabled={saving} onClick={isFinalSave ? handleSaveRecord : handleSaveStep}>
+            {/* Saves immediately on any step and returns to the table ("Save Record" on the last page). */}
+            <Button icon={Save} disabled={saving} onClick={handleSave}>
               {saving ? 'Saving…' : isFinalSave ? 'Save Record' : 'Save'}
             </Button>
           </>
         }
       />
       {submitError && <p className="mb-2 text-base text-danger">{submitError}</p>}
-      <HrMemberForm form={form} catalog={catalog} saving={saving} onSubmit={handleSaveRecord} />
+      <HrMemberForm form={form} catalog={catalog} saving={saving} onSubmit={handleSave} />
     </div>
   );
 }
