@@ -94,7 +94,7 @@ export default function HrDirectoryPage() {
   return (
     <div className="px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
-        title="HR DIRECTORY"
+        title="Hr Directory"
         actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={20} /> 
         Members</Link>}
       />
