@@ -14,6 +14,9 @@ import { HR_TYPE_OPTIONS } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember, HrType } from '../../types/hr';
 
+/** Empty values show a quiet dash instead of competing with real data. */
+const orDash = (v?: string) => (v ? v : <span className="text-muted/60">{EMPTY_DISPLAY}</span>);
+
 const PAGE_SIZE = 5;
 /** Two alternating row colours (defined for light AND dark in styles/theme.css). */
 const ROW_STRIPE = 'odd:bg-row-a even:bg-row-b';
@@ -136,15 +139,15 @@ export default function HrDirectoryPage() {
           <div className="overflow-x-auto rounded-lg border border-line">
             <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
-                <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wide">
+                <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wider text-muted">
                   <th className="w-10 px-3 py-3"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
-                  {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="px-2 py-3">{h}</th>)}
-                  <th className="px-2 py-3 text-center">Actions</th>
+                  {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-3">{h}</th>)}
+                  <th className="whitespace-nowrap px-2 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map(({ m, ctx }) => (
-                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/[0.06]', ROW_STRIPE)}>
+                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('group/row cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/[0.06]', ROW_STRIPE)}>
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
                     <td className="px-2 py-3">
                       <div className="flex items-center gap-2.5">
@@ -157,21 +160,21 @@ export default function HrDirectoryPage() {
                           <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
                         )}
                         <Link to={`/people/${m.id}`} className="min-w-0 leading-tight">
-                          <span className="block whitespace-nowrap font-medium">{m.name || 'Unnamed'}</span>
+                          <span className="block whitespace-nowrap font-semibold text-info group-hover/row:underline">{m.name || 'Unnamed'}</span>
                           <span className="block whitespace-nowrap text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
                         </Link>
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-2 py-3">{m.phone || EMPTY_DISPLAY}</td>
-                    <td className="whitespace-nowrap px-2 py-3">{ctx.lab?.name ?? EMPTY_DISPLAY}</td>
-                    <td className="px-2 py-3"><span className="block min-w-[150px] max-w-[230px]">{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
-                    <td className="whitespace-nowrap px-2 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
-                    <td className="whitespace-nowrap px-2 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
+                    <td className="whitespace-nowrap px-2 py-3 tabular-nums text-ink/90">{orDash(m.phone)}</td>
+                    <td className="whitespace-nowrap px-2 py-3 font-mono text-[13px] font-medium">{orDash(ctx.lab?.name)}</td>
+                    <td className="px-2 py-3"><span className="block min-w-[150px] max-w-[230px] leading-snug text-ink/90">{orDash(ctx.project?.title)}</span></td>
+                    <td className="whitespace-nowrap px-2 py-3 text-ink/90">{orDash(ctx.organization)}</td>
+                    <td className="whitespace-nowrap px-2 py-3 tabular-nums text-muted">{orDash(m.dateOfJoining ? formatDate(m.dateOfJoining) : undefined)}</td>
                     <td className="px-2 py-3"><HrTypeBadge type={m.hrType} /></td>
                     <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-4">
-                        <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-ink hover:text-info"><Eye size={18} /></Link>
-                        <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="text-ink hover:text-info"><Pencil size={17} /></Link>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="rounded-md p-1.5 text-muted transition hover:bg-primary/10 hover:text-info"><Eye size={18} /></Link>
+                        <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="rounded-md p-1.5 text-muted transition hover:bg-primary/10 hover:text-info"><Pencil size={17} /></Link>
                       </div>
                     </td>
                   </tr>
