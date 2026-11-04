@@ -33,6 +33,12 @@ const fieldsOf = (step: FormStep): FieldDef[] => step.groups.flatMap((g) => g.fi
 
 interface Args { catalog: HrCatalog | null; initial?: HrMember }
 
+/** Keeps digits only (max 13) and inserts the dashes: 12345-1234567-1 */
+const formatCnic = (v: string): string => {
+  const d = v.replace(/\D/g, '').slice(0, 13);
+  return [d.slice(0, 5), d.slice(5, 12), d.slice(12)].filter(Boolean).join('-');
+};
+
 export function useHrMemberForm({ catalog, initial }: Args) {
   const [hrType, setHrTypeState] = useState<HrType>(initial?.hrType ?? HR_TYPES.CONTRACTUAL);
   const [values, setValues] = useState<HrFormValues>(() => {
@@ -64,7 +70,8 @@ export function useHrMemberForm({ catalog, initial }: Args) {
   const currentStep: FormStep | null = isReview ? null : steps[stepIndex];
 
   // ---- values & the Theme -> Lab -> Project cascade ----------------------------------------
-  const setValue = useCallback((name: keyof HrFormValues, value: string) => {
+  const setValue = useCallback((name: keyof HrFormValues, rawValue: string) => {
+    const value = name === 'cnic' ? formatCnic(rawValue) : rawValue;
     setValues((prev) => {
       const next = { ...prev, [name]: value };
       if (name === 'commission') next.organization = '';
@@ -124,6 +131,7 @@ export function useHrMemberForm({ catalog, initial }: Args) {
     fields.forEach((f) => {
       const v = values[f.name].trim();
       if (!v) return;
+      if (f.name === 'cnic' && v.replace(/\D/g, '').length !== 13) out[f.id] = 'CNIC must have 13 digits (12345-1234567-1)';
       if (f.inputType === 'email' && !EMAIL_RE.test(v)) out[f.id] = 'Enter a valid email address';
       if (f.inputType === 'number' && (Number.isNaN(Number(v)) || Number(v) < 0)) out[f.id] = 'Enter a positive number';
     });

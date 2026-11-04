@@ -1,6 +1,6 @@
 import {
   User, Mail, Phone, GraduationCap, Building2, Settings, FlaskConical, FolderOpen, Hash, Clock, CheckCircle2, FileCheck2,
-  UserCheck, CalendarDays, Banknote, CalendarClock, MessageSquareText, ClipboardCheck, Users, Layers, type LucideIcon,
+  UserCheck, CalendarDays, Banknote, CalendarClock, MessageSquareText, ClipboardCheck, Users, Layers, Camera, CreditCard, type LucideIcon,
 } from 'lucide-react';
 import type { BadgeTone } from '../../components/ui/Badge';
 import type { HrFormValues, HrType, ProjectStatus, SelectOption } from '../../types/hr';
@@ -30,7 +30,7 @@ export interface FieldDef {
   id: string;
   name: keyof HrFormValues;
   label: string;
-  component: 'text' | 'select' | 'date' | 'textarea';
+  component: 'text' | 'select' | 'date' | 'textarea' | 'image';
   inputType?: 'text' | 'email' | 'tel' | 'number';
   icon?: LucideIcon;
   placeholder: string;
@@ -75,6 +75,8 @@ const S = [HR_TYPES.STRATEGIC];
 
 const firstName = (id: string): FieldDef => ({ id, name: 'firstName', label: 'First Name', component: 'text', icon: User, placeholder: 'Enter first name' });
 const lastName = (id: string): FieldDef => ({ id, name: 'lastName', label: 'Last Name', component: 'text', icon: User, placeholder: 'Enter last name' });
+const cnic = (id: string): FieldDef => ({ id, name: 'cnic', label: 'CNIC', component: 'text', icon: CreditCard, placeholder: '12345-1234567-1' });
+const photo = (id: string): FieldDef => ({ id, name: 'photo', label: 'Profile Photo', component: 'image', icon: Camera, placeholder: '', span: 'full' });
 const email = (id: string): FieldDef => ({ id, name: 'email', label: 'Email Address', component: 'text', inputType: 'email', icon: Mail, placeholder: 'Enter email address' });
 const phone = (id: string): FieldDef => ({ id, name: 'phone', label: 'Contact #', component: 'text', inputType: 'tel', icon: Phone, placeholder: 'e.g. +92 300 1234567' });
 const hrTypeGroup = (): FormGroup => ({ id: 'type', title: 'HR Type', icon: Users, columns: 1, kind: 'hrType', fields: [] });
@@ -95,8 +97,10 @@ export const HR_FORM_STEPS: FormStep[] = [
       {
         id: 'basicInfo', title: 'Personal & Contact Details', icon: User, columns: 2,
         fields: [
+          photo('photo'),
           firstName('firstName'),
           lastName('lastName'),
+          cnic('cnic'),
           email('email'),
           phone('phone'),
           { id: 'qualification', name: 'qualification', label: 'Qualification', component: 'select', icon: GraduationCap, placeholder: 'Select qualification', optionsKey: 'qualifications' },
@@ -158,7 +162,7 @@ export const HR_FORM_STEPS: FormStep[] = [
       hrTypeGroup(),
       {
         id: 'personalS', title: 'Personal & Contact Details', icon: User, columns: 2,
-        fields: [firstName('firstNameS'), lastName('lastNameS'), email('emailS'), phone('phoneS')],
+        fields: [photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), email('emailS'), phone('phoneS')],
       },
       {
         id: 'commissionOrg', title: 'Commission & Organization', icon: Building2, columns: 2,

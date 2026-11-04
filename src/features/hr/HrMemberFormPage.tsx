@@ -82,7 +82,7 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
-        title={mode === 'edit' ? 'Edit' : 'Add'}
+        title={mode === 'edit' ? 'Edit HR' : 'Add HR'}
         actions={
           <>
             <Button variant="outline" onClick={() => navigate('/people')}>Cancel</Button>

@@ -1,55 +1,35 @@
-import type { ReactNode } from 'react';
 import {
-  ArrowDown, Banknote, Building2, CalendarClock, CalendarDays, Check, ChevronRight, Clock, FileCheck2, FlaskConical, FolderOpen,
-  GraduationCap, Layers, MessageSquareText, UserCheck, X, type LucideIcon,
+  Banknote, Building2, CalendarClock, CalendarDays, Check, Clock, FileCheck2, FlaskConical, FolderOpen,
+  GraduationCap, UserCheck, X, type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../../lib';
-import Badge from '../../components/ui/Badge';
+import SectionCard from '../../components/ui/SectionCard';
 import { initialsOf, resolveMemberContext } from './hrFormat';
 import { formatDate } from '../../utils/date';
 import type { HrCatalog, HrMember } from '../../types/hr';
 
 /* ------------------------------------------------------------------ building blocks */
 
-/** Big number tile: icon, small label, large value. Empty values are visibly "Not set" instead of a lone dash. */
-function StatTile({ icon: Icon, label, value, unit }: { icon: LucideIcon; label: string; value?: string; unit?: string }) {
+/**
+ * Read-only version of a form field: the label on top (same style as the form) and the value in a field-shaped box.
+ * Empty values read "Not set". Used for every detail on the Review and View screens.
+ */
+function ReadField({ icon: Icon, label, value, unit, multiline, className }: {
+  icon?: LucideIcon; label: string; value?: string; unit?: string; multiline?: boolean; className?: string;
+}) {
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-line bg-app/40 p-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-info ring-1 ring-primary/30"><Icon size={18} /></span>
-      <div className="min-w-0 leading-tight">
-        <p className="truncate text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+      <span className="truncate text-base font-medium">{label}</span>
+      <div className={cn('flex w-full gap-2.5 rounded-md border border-field-line bg-field px-3.5 text-base', multiline ? 'min-h-24 items-start py-2.5' : 'min-h-11 items-center py-2')}>
+        {Icon && <Icon size={16} className={cn('shrink-0 text-muted', multiline && 'mt-1')} />}
         {value ? (
-          <p className="truncate text-lg font-semibold" title={`${value}${unit ? ` ${unit}` : ''}`}>
-            {value}{unit && <span className="ml-1 text-xs font-normal text-muted">{unit}</span>}
-          </p>
+          <span className={cn('min-w-0 break-words', multiline && 'whitespace-pre-line')} title={value}>
+            {value}{unit && <span className="ml-1.5 text-sm text-muted">{unit}</span>}
+          </span>
         ) : (
-          <p className="text-sm italic text-muted">Not set</p>
+          <span className="italic text-muted">Not set</span>
         )}
       </div>
-    </div>
-  );
-}
-
-function Card({ title, icon: Icon, aside, className, children }: { title: string; icon: LucideIcon; aside?: ReactNode; className?: string; children: ReactNode }) {
-  return (
-    <section className={cn('rounded-xl border border-line bg-surface/60 p-4', className)}>
-      <header className="mb-3 flex items-center gap-2.5">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary-soft ring-1 ring-primary/40"><Icon size={16} /></span>
-        <h2 className="text-base font-semibold">{title}</h2>
-        {aside && <div className="ml-auto">{aside}</div>}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-/** One node of the Theme -> Lab -> Project chain. */
-function ChainNode({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string }) {
-  const filled = Boolean(value);
-  return (
-    <div className={cn('min-w-0 flex-1 rounded-lg border p-3', filled ? 'border-primary/50 bg-primary-soft/50' : 'border-dashed border-field-line bg-app/30')}>
-      <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted"><Icon size={13} /> {label}</p>
-      <p className={cn('mt-1 break-words', filled ? 'font-semibold' : 'text-sm italic text-muted')} title={value}>{value || 'Not assigned'}</p>
     </div>
   );
 }
@@ -110,13 +90,17 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
   const doneCount = steps.filter((s) => s.value === 'yes').length;
 
   return (
-    <div className="space-y-4">
-      {/* 1. Who + the numbers that matter, readable at a glance */}
-      <section className="rounded-xl border border-line bg-gradient-to-br from-primary-soft/70 via-surface/70 to-surface/50 p-4 sm:p-5">
+    <div className="space-y-3">
+      {/* Who */}
+      <section className="rounded-lg border border-line bg-gradient-to-br from-primary-soft/70 via-surface/70 to-surface/50 p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-4 sm:gap-5">
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary text-xl font-bold text-white ring-4 ring-primary/25 sm:h-20 sm:w-20 sm:text-2xl">
-            {initialsOf(member.name)}
-          </span>
+          {member.photo ? (
+            <img src={member.photo} alt={member.name} className="h-16 w-16 shrink-0 rounded-full object-cover ring-4 ring-primary/25 sm:h-20 sm:w-20" />
+          ) : (
+            <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary text-xl font-bold text-white ring-4 ring-primary/25 sm:h-20 sm:w-20 sm:text-2xl">
+              {initialsOf(member.name)}
+            </span>
+          )}
           <div className="min-w-0 flex-1 basis-64">
             <h2 className="truncate text-2xl font-bold leading-tight" title={member.name}>{member.name || 'Unnamed member'}</h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -124,51 +108,46 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
             </div>
           </div>
         </div>
-
-        <div className={cn('mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2', isRa ? 'lg:grid-cols-4' : 'lg:grid-cols-2')}>
-          {isRa ? (
-            <>
-              <StatTile icon={CalendarDays} label="Date of Joining" value={member.dateOfJoining ? formatDate(member.dateOfJoining) : undefined} />
-              <StatTile icon={Banknote} label="Pay Package" value={money && `PKR ${money}`} unit="/ month" />
-              <StatTile icon={CalendarClock} label="Contract Duration" value={months(member.contractDuration)} unit="months" />
-              <StatTile icon={Clock} label="Project Duration" value={months(member.projectDuration)} unit="months" />
-            </>
-          ) : (
-            <>
-              <StatTile icon={Building2} label="Commission" value={ctx.commission || undefined} />
-              <StatTile icon={Building2} label="Organization" value={ctx.organization || undefined} />
-            </>
-          )}
-        </div>
       </section>
 
-      {/* 2. Where they work + where they are in the hiring pipeline (contractual RAs only) */}
-      {isRa && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card title="Assignment" icon={Layers} className="lg:col-span-2">
-            {/* Only Lab and Project (title) - no technology theme, no project code. */}
-            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-              <ChainNode icon={FlaskConical} label="Lab" value={ctx.lab?.name} />
-              <ChevronRight size={18} className="hidden shrink-0 text-muted sm:block" />
-              <ArrowDown size={16} className="mx-auto shrink-0 text-muted sm:hidden" />
-              <ChainNode icon={FolderOpen} label="Project" value={project?.title} />
+      {isRa ? (
+        <>
+          <SectionCard title="Contract Details">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+              <ReadField icon={CalendarDays} label="Date of Joining" value={member.dateOfJoining ? formatDate(member.dateOfJoining) : undefined} />
+              <ReadField icon={Banknote} label="Pay Package" value={money && `PKR ${money}`} unit="/ month" />
+              <ReadField icon={CalendarClock} label="Contract Duration" value={months(member.contractDuration)} unit="months" />
+              <ReadField icon={Clock} label="Project Duration" value={months(member.projectDuration)} unit="months" />
             </div>
-          </Card>
+          </SectionCard>
 
-          <Card title="Onboarding" icon={UserCheck} aside={<Badge tone={doneCount === 3 ? 'solid' : 'soft'}>{doneCount} of 3 done</Badge>}>
-            <ol className="pt-1">
-              {steps.map((s, i) => <ProgressRow key={s.label} {...s} last={i === steps.length - 1} />)}
-            </ol>
-          </Card>
-        </div>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <SectionCard title="Assignment" className="h-full">
+              <div className="grid grid-cols-1 gap-4">
+                <ReadField icon={FlaskConical} label="Lab" value={ctx.lab?.name} />
+                <ReadField icon={FolderOpen} label="Project" value={project?.title} />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Onboarding" badge={`${doneCount} of 3 done`} badgeTone={doneCount === 3 ? 'solid' : 'soft'} className="h-full">
+              <ol>
+                {steps.map((st, i) => <ProgressRow key={st.label} {...st} last={i === steps.length - 1} />)}
+              </ol>
+            </SectionCard>
+          </div>
+
+          <SectionCard title="Remarks">
+            <ReadField label="Remarks" value={member.remarks || undefined} multiline />
+          </SectionCard>
+        </>
+      ) : (
+        <SectionCard title="Commission & Organization">
+          <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+            <ReadField icon={Building2} label="Commission" value={ctx.commission || undefined} />
+            <ReadField icon={Building2} label="Organization" value={ctx.organization || undefined} />
+          </div>
+        </SectionCard>
       )}
-
-      {/* 3. Notes (contractual only - Strategic HR has no remarks field) */}
-      {isRa && <Card title="Remarks" icon={MessageSquareText}>
-        {member.remarks
-          ? <p className="whitespace-pre-line text-sm leading-relaxed">{member.remarks}</p>
-          : <p className="text-sm italic text-muted">No remarks added.</p>}
-      </Card>}
     </div>
   );
 }

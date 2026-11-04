@@ -35,6 +35,8 @@ export interface HrFormValues {
   firstName: string;
   lastName: string;
   name: string;               // Full name = first + last. Derived on save (not a form field); used by the directory, search and view page.
+  cnic: string;               // 13 digits, shown as 12345-1234567-1
+  photo: string;              // profile image as a data URL ('' = none). Send as multipart / upload to storage if your API prefers.
   email: string;
   phone: string;              // Contact #
   qualification: string;
@@ -57,7 +59,7 @@ export type HrMemberInput = HrFormValues & { hrType: HrType };
 export type HrMember = HrMemberInput & { id: string };
 
 export const EMPTY_FORM_VALUES: HrFormValues = {
-  firstName: '', lastName: '', name: '', email: '', phone: '', qualification: '', commission: '', organization: '',
+  firstName: '', lastName: '', name: '', cnic: '', photo: '', email: '', phone: '', qualification: '', commission: '', organization: '',
   technologyTheme: '', lab: '', projectId: '', projectDuration: '',
   selected: '', loaIssued: '', joined: '', dateOfJoining: '',
   payPackage: '', contractDuration: '', remarks: '',

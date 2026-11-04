@@ -3,6 +3,7 @@ import TextInput from './TextInput';
 import TextAreaInput from './TextAreaInput';
 import SelectInput from './SelectInput';
 import DatePicker from './DatePicker';
+import ImageUpload from './ImageUpload';
 import type { FieldDef } from '../../features/hr/hrFormConfig';
 import type { HrFormValues, SelectOption } from '../../types/hr';
 
@@ -28,6 +29,9 @@ export default function FormFieldRenderer({ field, value, error, options, disabl
       break;
     case 'date':
       input = <DatePicker id={field.id} value={value} placeholder={placeholder} onChange={set} />;
+      break;
+    case 'image':
+      input = <ImageUpload id={field.id} value={value} onChange={set} />;
       break;
     case 'textarea':
       input = <TextAreaInput id={field.id} name={field.name} placeholder={placeholder} value={value} maxLength={field.maxLength} onChange={(e) => set(e.target.value)} />;

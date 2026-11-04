@@ -3,13 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Briefcase, CheckCircle2, ChevronLeft, ChevronRight, Eye, Pencil, Plus, RotateCcw, Search, UserSearch, Users, UsersRound, X } from 'lucide-react';
 import { cn } from '../../lib';
 import PageHeader from '../../components/layout/PageHeader';
-import Badge from '../../components/ui/Badge';
+import HrTypeBadge from './HrTypeBadge';
+import ImageLightbox from '../../components/ui/ImageLightbox';
 import { buttonClasses } from '../../components/ui/Button';
 import SelectInput from '../../components/form/SelectInput';
 import { useHrCatalog } from './useHrCatalog';
 import { hrService } from './hrService';
 import { EMPTY_DISPLAY, avatarColor, initialsOf, resolveMemberContext } from './hrFormat';
-import { HR_TYPE_OPTIONS, HR_TYPE_TONE, hrTypeLabel } from './hrFormConfig';
+import { HR_TYPE_OPTIONS } from './hrFormConfig';
 import { formatDate } from '../../utils/date';
 import type { HrMember, HrType } from '../../types/hr';
 
@@ -29,6 +30,7 @@ export default function HrDirectoryPage() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  const [preview, setPreview] = useState<{ src: string; name: string } | null>(null);
   const [notice, setNotice] = useState<string>((location.state as { notice?: string } | null)?.notice ?? '');
 
   useEffect(() => { hrService.listMembers().then(setMembers); }, []);
@@ -94,9 +96,8 @@ export default function HrDirectoryPage() {
   return (
     <div className="px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
-        title="Hr Directory"
-        actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={20} /> 
-        Members</Link>}
+        title="HR Directory"
+        actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR</Link>}
       />
 
       {notice && (
@@ -124,8 +125,8 @@ export default function HrDirectoryPage() {
           />
         </div>
         <SelectInput aria-label="HR Type" placeholder="All HR Types" options={HR_TYPE_OPTIONS} value={filters.type} onChange={(e) => setFilter({ type: e.target.value as Filters['type'] })} />
-        <SelectInput aria-label="Technology Theme" placeholder="All Themes" options={themeOptions} value={filters.theme} onChange={(e) => setFilter({ theme: e.target.value, lab: '' })} />
         <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
+        <SelectInput aria-label="Technology Theme" placeholder="All Themes" options={themeOptions} value={filters.theme} onChange={(e) => setFilter({ theme: e.target.value, lab: '' })} />
         <button type="button" onClick={() => { setFilters(NO_FILTERS); setPage(1); }} disabled={!hasFilters} className="col-span-2 inline-flex items-center gap-2 justify-self-end text-sm text-info lg:col-span-1 hover:underline disabled:opacity-40 disabled:no-underline">
           <RotateCcw size={15} /> Clear Filters
         </button>
@@ -146,20 +147,27 @@ export default function HrDirectoryPage() {
                   <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/[0.06]', ROW_STRIPE)}>
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
                     <td className="px-2 py-3">
-                      <Link to={`/people/${m.id}`} className="flex items-center gap-2.5">
-                        <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
-                        <span className="min-w-0 leading-tight">
+                      <div className="flex items-center gap-2.5">
+                        {m.photo ? (
+                          // Clicking the photo opens it full size (and does NOT open the member page).
+                          <button type="button" aria-label={`View photo of ${m.name}`} title="View photo" onClick={(e) => { e.stopPropagation(); setPreview({ src: m.photo, name: m.name }); }} className="shrink-0 cursor-zoom-in rounded-full ring-primary/60 transition hover:ring-2">
+                            <img src={m.photo} alt="" className="h-9 w-9 rounded-full object-cover" />
+                          </button>
+                        ) : (
+                          <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white', avatarColor(m.name || m.id))}>{initialsOf(m.name)}</span>
+                        )}
+                        <Link to={`/people/${m.id}`} className="min-w-0 leading-tight">
                           <span className="block whitespace-nowrap font-medium">{m.name || 'Unnamed'}</span>
                           <span className="block whitespace-nowrap text-xs text-muted">{m.email || EMPTY_DISPLAY}</span>
-                        </span>
-                      </Link>
+                        </Link>
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-2 py-3">{m.phone || EMPTY_DISPLAY}</td>
                     <td className="whitespace-nowrap px-2 py-3">{ctx.lab?.name ?? EMPTY_DISPLAY}</td>
                     <td className="px-2 py-3"><span className="block min-w-[150px] max-w-[230px]">{ctx.project?.title ?? EMPTY_DISPLAY}</span></td>
                     <td className="whitespace-nowrap px-2 py-3">{ctx.organization || EMPTY_DISPLAY}</td>
                     <td className="whitespace-nowrap px-2 py-3">{m.dateOfJoining ? formatDate(m.dateOfJoining) : EMPTY_DISPLAY}</td>
-                    <td className="px-2 py-3"><Badge tone={HR_TYPE_TONE[m.hrType]}>{hrTypeLabel(m.hrType)}</Badge></td>
+                    <td className="px-2 py-3"><HrTypeBadge type={m.hrType} /></td>
                     <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-4">
                         <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="text-ink hover:text-info"><Eye size={18} /></Link>
@@ -188,6 +196,7 @@ export default function HrDirectoryPage() {
           <PageBtn aria-label="Next page" disabled={current === pageCount} onClick={() => setPage(current + 1)}><ChevronRight size={16} /></PageBtn>
         </div>
       </div>
+      {preview && <ImageLightbox src={preview.src} title={preview.name} onClose={() => setPreview(null)} />}
     </div>
   );
 }

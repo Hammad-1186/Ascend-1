@@ -23,7 +23,7 @@ interface Props {
 }
 
 /**
- * Multi-step form (Strategic HR: one single page, no stepper / review). Stepper on top (left-aligned, hidden on Review), the step's cards, and Previous / Next right
+ * Multi-step form (Strategic HR: one single page, no stepper / review). HR Type card, then the stepper (shown on every step incl. Review), the step's cards, and Previous / Next right
  * under the last card. The Review step is the same summary as the View page.
  * Presentational - all state lives in useHrMemberForm; Save / Cancel are in the page header (HrMemberFormPage).
  */
@@ -65,13 +65,18 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
     </SectionCard>
   );
 
+  // The HR Type card (first step only) sits ABOVE the stepper, so switching Contractual <-> Strategic never moves it.
+  const typeGroup = isReview ? undefined : currentStep?.groups.find((g) => g.kind === 'hrType');
+  const otherGroups = currentStep?.groups.filter((g) => g.kind !== 'hrType') ?? [];
+
   return (
     <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-3">
-      {!isReview && !form.isSingleStep && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
+      {typeGroup && renderGroup(typeGroup)}
+      {!form.isSingleStep && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
 
       {/* Only this area scrolls, and only if a step is taller than the screen. */}
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
-        {isReview ? <MemberOverview member={draft} catalog={catalog} /> : currentStep?.groups.map(renderGroup)}
+        {isReview ? <MemberOverview member={draft} catalog={catalog} /> : otherGroups.map(renderGroup)}
 
         {/* Right after the last card, not pinned to the bottom of the screen. */}
         {!form.isSingleStep && (
