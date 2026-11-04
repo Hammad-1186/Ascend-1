@@ -19,7 +19,7 @@ export default function SelectInput({ icon: Icon, options = [], placeholder, val
       <select
         value={value}
         className={cn(
-          'h-11 w-full appearance-none truncate rounded-md border border-field-line bg-field pr-10 text-base',
+          'h-12 w-full appearance-none truncate rounded-md border border-field-line bg-field pr-10 text-base',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60',
           value ? 'text-ink' : 'text-muted',
           Icon ? 'pl-11' : 'pl-3.5',

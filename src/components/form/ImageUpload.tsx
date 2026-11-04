@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Camera, Trash2 } from 'lucide-react';
+import { Camera, Trash2, Upload } from 'lucide-react';
 
 const MAX_FILE_MB = 5;
 const MAX_SIDE = 800; // px - the photo is downscaled so the stored value stays reasonably small
@@ -25,10 +25,7 @@ function toDataUrl(file: File): Promise<string> {
 
 interface Props { id: string; value: string; onChange: (dataUrl: string) => void }
 
-/**
- * Compact photo picker: a round preview that is itself the upload button, with a small Remove link under it.
- * Deliberately small (about two form rows tall) so the form page does not need to scroll. Value is a data URL ('' = none).
- */
+/** Round photo preview + Upload / Change / Remove. Value is a data URL ('' when empty). */
 export default function ImageUpload({ id, value, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
@@ -43,23 +40,24 @@ export default function ImageUpload({ id, value, onChange }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-start gap-1.5">
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        title={`${value ? 'Change' : 'Upload'} photo (JPG or PNG, up to ${MAX_FILE_MB} MB)`}
-        aria-label={value ? 'Change photo' : 'Upload photo'}
-        className="group relative grid h-[88px] w-[88px] shrink-0 place-items-center overflow-hidden rounded-full border-2 border-dashed border-field-line bg-field text-muted transition hover:border-primary hover:text-info"
-      >
+    <div className="flex flex-wrap items-center gap-4">
+      <span className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-dashed border-field-line bg-field text-muted">
         {value ? <img src={value} alt="Profile preview" className="h-full w-full object-cover" /> : <Camera size={26} />}
-        {value && <span className="absolute inset-0 grid place-items-center bg-black/50 text-white opacity-0 transition group-hover:opacity-100"><Camera size={22} /></span>}
-      </button>
-      {value ? (
-        <button type="button" onClick={() => onChange('')} className="inline-flex items-center gap-1 text-xs text-muted transition hover:text-danger"><Trash2 size={13} /> Remove</button>
-      ) : (
-        <span className="text-xs text-muted">Click to upload</span>
-      )}
-      {error && <p className="max-w-[140px] text-xs text-danger">{error}</p>}
+      </span>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-md border border-primary/60 bg-primary/10 px-4 text-sm font-medium text-info transition hover:bg-primary/20">
+            <Upload size={16} /> {value ? 'Change photo' : 'Upload photo'}
+          </button>
+          {value && (
+            <button type="button" onClick={() => onChange('')} className="inline-flex h-10 items-center gap-2 rounded-md border border-line px-4 text-sm text-muted transition hover:text-danger">
+              <Trash2 size={16} /> Remove
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-muted">JPG or PNG, up to {MAX_FILE_MB} MB (optional)</p>
+        {error && <p className="text-sm text-danger">{error}</p>}
+      </div>
       <input ref={inputRef} id={id} type="file" accept="image/*" className="sr-only" onChange={(e) => handleFile(e.target.files?.[0])} />
     </div>
   );

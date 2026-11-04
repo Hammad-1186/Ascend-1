@@ -161,9 +161,12 @@ export const HR_FORM_STEPS: FormStep[] = [
     groups: [
       hrTypeGroup(),
       {
-        id: 'personalS', title: 'Personal & Organization Details', icon: User, columns: 3,
+        id: 'personalS', title: 'Personal & Contact Details', icon: User, columns: 2,
+        fields: [photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), email('emailS'), phone('phoneS')],
+      },
+      {
+        id: 'commissionOrg', title: 'Commission & Organization', icon: Building2, columns: 2,
         fields: [
-          photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), email('emailS'), phone('phoneS'),
           { id: 'commission', name: 'commission', label: 'Commission', component: 'select', icon: Building2, placeholder: 'Select commission', optionsKey: 'commissions' },
           { id: 'organization', name: 'organization', label: 'Organization', component: 'select', icon: Building2, placeholder: 'Select organization', optionsKey: 'organizations', dependsOn: 'commission', dependsHint: 'Select a commission first', emptyHint: 'No organizations in this commission' },
         ],

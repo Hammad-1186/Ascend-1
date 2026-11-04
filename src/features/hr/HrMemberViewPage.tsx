@@ -37,7 +37,7 @@ export default function HrMemberViewPage() {
 
 function MemberDetails({ member, catalog }: { member: HrMember; catalog: HrCatalog }) {
   return (
-    <div className="px-4 py-2 sm:px-6 sm:py-3">
+    <div className="px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"

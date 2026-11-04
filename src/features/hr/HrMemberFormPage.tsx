@@ -78,7 +78,7 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
   const isFinalSave = form.isReview || form.isSingleStep;
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-2 sm:px-6 sm:py-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-3 sm:px-6 sm:py-4">
       <PageHeader
         backTo="/people"
         backLabel="Back to HR Directory"
