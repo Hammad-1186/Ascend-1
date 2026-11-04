@@ -21,7 +21,7 @@
   --c-text: 255 255 255;
   --c-success: 52 211 153;
   --c-row-a: 4 20 50;   /* table rows - odd */
-  --c-row-b: 10 38 88;   /* table rows - even */
+  --c-row-b: 6 25 58;   /* table rows - even */
   color-scheme: dark;
 }
 
@@ -43,7 +43,7 @@
   --c-text: 17 24 39;
   --c-success: 5 150 105;
   --c-row-a: 250 252 255; /* table rows - odd */
-  --c-row-b: 232 240 252; /* table rows - even */
+  --c-row-b: 245 248 254; /* table rows - even */
   color-scheme: light;
 }
 

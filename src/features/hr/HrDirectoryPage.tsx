@@ -142,7 +142,7 @@ export default function HrDirectoryPage() {
               </thead>
               <tbody>
                 {pageRows.map(({ m, ctx }) => (
-                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/10', ROW_STRIPE)}>
+                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/[0.06]', ROW_STRIPE)}>
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
                     <td className="px-2 py-3">
                       <Link to={`/people/${m.id}`} className="flex items-center gap-2.5">

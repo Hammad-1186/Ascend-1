@@ -1,16 +1,13 @@
 import type { ReactNode } from 'react';
 import {
   ArrowDown, Banknote, Building2, CalendarClock, CalendarDays, Check, ChevronRight, Clock, FileCheck2, FlaskConical, FolderOpen,
-  GraduationCap, Layers, Mail, MessageSquareText, Phone, UserCheck, X, type LucideIcon,
+  GraduationCap, Layers, MessageSquareText, UserCheck, X, type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../../lib';
-import Badge, { type BadgeTone } from '../../components/ui/Badge';
-import { HR_TYPE_TONE, PROJECT_STATUS_LABEL, hrTypeLabel } from './hrFormConfig';
+import Badge from '../../components/ui/Badge';
 import { initialsOf, resolveMemberContext } from './hrFormat';
 import { formatDate } from '../../utils/date';
-import type { HrCatalog, HrMember, ProjectStatus } from '../../types/hr';
-
-const STATUS_TONE: Record<ProjectStatus, BadgeTone> = { 'in-progress': 'solid', initiated: 'soft', completed: 'success', 'on-hold': 'muted' };
+import type { HrCatalog, HrMember } from '../../types/hr';
 
 /* ------------------------------------------------------------------ building blocks */
 
@@ -52,7 +49,7 @@ function ChainNode({ icon: Icon, label, value }: { icon: LucideIcon; label: stri
   return (
     <div className={cn('min-w-0 flex-1 rounded-lg border p-3', filled ? 'border-primary/50 bg-primary-soft/50' : 'border-dashed border-field-line bg-app/30')}>
       <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted"><Icon size={13} /> {label}</p>
-      <p className={cn('mt-1 truncate', filled ? 'font-semibold' : 'text-sm italic text-muted')} title={value}>{value || 'Not assigned'}</p>
+      <p className={cn('mt-1 break-words', filled ? 'font-semibold' : 'text-sm italic text-muted')} title={value}>{value || 'Not assigned'}</p>
     </div>
   );
 }
@@ -123,17 +120,7 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
           <div className="min-w-0 flex-1 basis-64">
             <h2 className="truncate text-2xl font-bold leading-tight" title={member.name}>{member.name || 'Unnamed member'}</h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <Badge tone={HR_TYPE_TONE[member.hrType]}>{hrTypeLabel(member.hrType)}</Badge>
-              {project && <Badge tone={STATUS_TONE[project.status]}>Project {PROJECT_STATUS_LABEL[project.status]}</Badge>}
               {qualification && <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-0.5 text-xs"><GraduationCap size={13} /> {qualification}</span>}
-            </div>
-            <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
-              {member.email
-                ? <a href={`mailto:${member.email}`} className="inline-flex min-w-0 items-center gap-2 text-info hover:underline"><Mail size={15} className="shrink-0" /><span className="truncate">{member.email}</span></a>
-                : <span className="inline-flex items-center gap-2 italic text-muted"><Mail size={15} /> No email</span>}
-              {member.phone
-                ? <a href={`tel:${member.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-2 text-info hover:underline"><Phone size={15} /> {member.phone}</a>
-                : <span className="inline-flex items-center gap-2 italic text-muted"><Phone size={15} /> No contact number</span>}
             </div>
           </div>
         </div>
@@ -159,25 +146,12 @@ export default function MemberOverview({ member, catalog }: { member: HrMember; 
       {isRa && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card title="Assignment" icon={Layers} className="lg:col-span-2">
+            {/* Only Lab and Project (title) - no technology theme, no project code. */}
             <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-              <ChainNode icon={Layers} label="Technology Theme" value={ctx.theme?.name} />
-              <ChevronRight size={18} className="hidden shrink-0 text-muted sm:block" />
-              <ArrowDown size={16} className="mx-auto shrink-0 text-muted sm:hidden" />
               <ChainNode icon={FlaskConical} label="Lab" value={ctx.lab?.name} />
               <ChevronRight size={18} className="hidden shrink-0 text-muted sm:block" />
               <ArrowDown size={16} className="mx-auto shrink-0 text-muted sm:hidden" />
-              <ChainNode icon={FolderOpen} label="Project" value={project?.code} />
-            </div>
-            <div className="mt-3 rounded-lg border border-line bg-app/30 p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted">Project Title</p>
-              {project ? (
-                <div className="mt-1 flex flex-wrap items-start justify-between gap-2">
-                  <p className="min-w-0 flex-1 basis-60 font-semibold leading-snug">{project.title}</p>
-                  <Badge tone={STATUS_TONE[project.status]}>{PROJECT_STATUS_LABEL[project.status]}</Badge>
-                </div>
-              ) : (
-                <p className="mt-1 text-sm italic text-muted">No project assigned yet</p>
-              )}
+              <ChainNode icon={FolderOpen} label="Project" value={project?.title} />
             </div>
           </Card>
 
