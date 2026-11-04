@@ -94,7 +94,7 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
         aria-expanded={open}
         onClick={toggle}
         className={cn(
-          'relative flex h-12 w-full items-center rounded-md border border-field-line bg-field pl-3.5 pr-10 text-left text-base',
+          'relative flex h-11 w-full items-center rounded-md border border-field-line bg-field pl-3.5 pr-10 text-left text-base',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
           open && 'border-primary ring-1 ring-primary',
         )}
