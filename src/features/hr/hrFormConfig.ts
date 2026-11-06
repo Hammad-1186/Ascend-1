@@ -67,6 +67,8 @@ export interface FormGroup {
   title: string;
   icon: LucideIcon;
   columns: 1 | 2 | 3 | 4;
+  /** Extra classes for the card itself, e.g. 'lg:col-span-2' when the step lays its cards out in a grid. */
+  className?: string;
   /** 'hrType' renders the HR-type radio instead of fields. */
   kind?: 'hrType';
   fields: FieldDef[];
@@ -78,6 +80,8 @@ export interface FormStep {
   title: string;
   icon: LucideIcon;
   groups: FormGroup[];
+  /** Grid classes to lay this step's cards side by side instead of stacking them, e.g. 'lg:grid-cols-3'. */
+  layout?: string;
   visibleFor?: HrType[];
 }
 
@@ -108,22 +112,30 @@ const remarks = (id: string): FieldDef => ({ id, name: 'remarks', label: 'Remark
 export const HR_FORM_STEPS: FormStep[] = [
   {
     id: 'basic', title: 'Basic', icon: User, visibleFor: C,
+    layout: 'lg:grid-cols-3', // Personal (2/3) beside Education (1/3)
     groups: [
       hrTypeGroup(),
       {
-        id: 'basicInfo', title: 'Personal & Contact Details', icon: User, columns: 4,
+        // Row 1 = who they are, row 2 = identity + phone, row 3 = e-mail.
+        id: 'basicInfo', title: 'Personal & Contact Details', icon: User, columns: 3, className: 'lg:col-span-2',
         fields: [
           photo('photo'),
           firstName('firstName'),
           lastName('lastName'),
-          { id: 'dob', name: 'dob', label: 'Date of Birth', component: 'date', icon: Cake, placeholder: 'Select date', yearRange: [1950, new Date().getFullYear()] },
           { id: 'gender', name: 'gender', label: 'Gender', component: 'select', icon: User, placeholder: 'Select', optionsKey: 'genders' },
+          { id: 'dob', name: 'dob', label: 'Date of Birth', component: 'date', icon: Cake, placeholder: 'Select date', yearRange: [1950, new Date().getFullYear()] },
           cnic('cnic'),
-          email('email'),
           phone('phone'),
-          { id: 'qualification', name: 'qualification', label: 'Qualification', component: 'select', icon: GraduationCap, placeholder: 'Select', optionsKey: 'qualifications' },
-          { id: 'discipline', name: 'discipline', label: 'Field of Study', component: 'select', icon: GraduationCap, placeholder: 'Select', optionsKey: 'disciplines' },
-          { id: 'cv', name: 'cv', label: 'Upload CV', component: 'file', icon: FileText, placeholder: 'Upload CV (PDF / DOC, max 5 MB)', accept: '.pdf,.doc,.docx', fileNameKey: 'cvName', span: 2 },
+          { ...email('email'), span: 'full' },
+        ],
+      },
+      {
+        // Everything about their education together: qualification, then its field of study, then the CV.
+        id: 'education', title: 'Education & CV', icon: GraduationCap, columns: 1,
+        fields: [
+          { id: 'qualification', name: 'qualification', label: 'Qualification', component: 'select', icon: GraduationCap, placeholder: 'Select qualification', optionsKey: 'qualifications' },
+          { id: 'discipline', name: 'discipline', label: 'Field of Study', component: 'select', icon: GraduationCap, placeholder: 'Select field of study', optionsKey: 'disciplines' },
+          { id: 'cv', name: 'cv', label: 'CV', component: 'file', icon: FileText, placeholder: 'Upload CV', accept: '.pdf,.doc,.docx', fileNameKey: 'cvName' },
         ],
       },
     ],
@@ -161,9 +173,10 @@ export const HR_FORM_STEPS: FormStep[] = [
           spacer('sp1'),
           { id: 'loaIssued', name: 'loaIssued', label: 'LOA Status', component: 'checkbox', checkboxText: 'LOA Issued', icon: FileCheck2, placeholder: '' },
           { id: 'loaIssuedDate', name: 'loaIssuedDate', label: 'LOA Issued Date', component: 'date', icon: CalendarDays, placeholder: 'Select date', dependsOn: 'loaIssued', dependsOnValue: 'yes', dependsHint: 'Tick "LOA Issued" first' },
-          { id: 'loaFile', name: 'loaFile', label: 'Upload LOA', component: 'file', icon: Upload, placeholder: 'Upload LOA (PDF / DOC)', accept: '.pdf,.doc,.docx', fileNameKey: 'loaFileName', dependsOn: 'loaIssued', dependsOnValue: 'yes', dependsHint: 'Tick "LOA Issued" first' },
+          { id: 'loaFile', name: 'loaFile', label: 'LOA Document', component: 'file', icon: Upload, placeholder: 'Upload LOA', accept: '.pdf,.doc,.docx', fileNameKey: 'loaFileName', dependsOn: 'loaIssued', dependsOnValue: 'yes', dependsHint: 'Tick "LOA Issued" first' },
           { id: 'joined', name: 'joined', label: 'Joining Status', component: 'checkbox', checkboxText: 'Joined', icon: CheckCircle2, placeholder: '' },
-          { ...dateOfJoining('dateOfJoining'), label: 'Joining Date', dependsOn: 'joined', dependsOnValue: 'yes', dependsHint: 'Tick "Joined" first' },
+          // Always selectable: if "Joined" is No, this is the date they are expected to join.
+          { ...dateOfJoining('dateOfJoining'), label: 'Joining Date' },
           spacer('sp2'),
         ],
       },
@@ -185,12 +198,17 @@ export const HR_FORM_STEPS: FormStep[] = [
   // Strategic HR: ONE single-page form (no stepper, no review) - Commission first, then an Organization from that commission.
   {
     id: 'strategic', title: 'Strategic HR', icon: Building2, visibleFor: S,
+    layout: 'lg:grid-cols-3', // Personal (2/3) beside Role & Organization (1/3)
     groups: [
       hrTypeGroup(),
       {
-        id: 'personalS', title: 'Personal & Organization Details', icon: User, columns: 3,
+        id: 'personalS', title: 'Personal & Contact Details', icon: User, columns: 3, className: 'lg:col-span-2',
+        fields: [photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), { ...email('emailS'), span: 2 }, phone('phoneS')],
+      },
+      {
+        // Role first, then pick the commission, then one of ITS organizations.
+        id: 'orgS', title: 'Role & Organization', icon: Building2, columns: 1,
         fields: [
-          photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), email('emailS'), phone('phoneS'),
           { id: 'role', name: 'role', label: 'Role', component: 'select', icon: UserCheck, placeholder: 'Select role', optionsKey: 'roles' },
           { id: 'commission', name: 'commission', label: 'Commission', component: 'select', icon: Building2, placeholder: 'Select commission', optionsKey: 'commissions' },
           { id: 'organization', name: 'organization', label: 'Organization', component: 'select', icon: Building2, placeholder: 'Select organization', optionsKey: 'organizations', dependsOn: 'commission', dependsHint: 'Select a commission first', emptyHint: 'No organizations in this commission' },

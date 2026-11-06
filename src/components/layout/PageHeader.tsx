@@ -11,19 +11,17 @@ interface Props {
   actions?: ReactNode;
 }
 
-/** Plain title on the left, actions on the right. No icon, no sub-line. */
+/** One compact row: [Back] Title ............ actions. Keeping it to a single row leaves more height for the page below. */
 export default function PageHeader({ backTo, backLabel, title, actions }: Props) {
   return (
-    <header className="mb-2 border-b border-line pb-2">
+    <header className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line pb-2">
       {backTo && (
-        <Link to={backTo} className="mb-0.5 inline-flex items-center gap-2 text-base text-muted hover:text-ink">
-          <ArrowLeft size={16} /> {backLabel}
+        <Link to={backTo} className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-line px-3 py-1 text-sm text-muted transition hover:border-primary/60 hover:text-ink">
+          <ArrowLeft size={15} /> {backLabel}
         </Link>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <h1 className="min-w-0 flex-1 basis-40 truncate text-2xl font-bold leading-tight">{title}</h1>
-        {actions && <div className="flex flex-wrap items-center justify-end gap-3">{actions}</div>}
-      </div>
+      <h1 className="min-w-0 flex-1 basis-40 truncate text-2xl font-bold leading-tight">{title}</h1>
+      {actions && <div className="flex flex-wrap items-center justify-end gap-3">{actions}</div>}
     </header>
   );
 }

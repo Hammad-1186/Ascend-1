@@ -13,7 +13,7 @@ interface Props {
   onChange: (dataUrl: string, fileName: string) => void;
   accept?: string;
   disabled?: boolean;
-  /** Shown while empty, e.g. "Upload CV". */
+  /** The link text while empty, e.g. "Upload CV". */
   placeholder: string;
 }
 
@@ -25,7 +25,10 @@ const readAsDataUrl = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-/** Field-height upload button. Shows the chosen file name with a remove (x). Used for the CV and the LOA document. */
+/**
+ * Upload control styled like the "+ Add ..." links: an upload icon + blue link text ("Upload CV"). Once a file is
+ * chosen it turns into a small chip with the file name and an x to remove it. Sits on the same row height as the inputs.
+ */
 export default function FileUpload({ id, value, fileName, onChange, accept = '.pdf,.doc,.docx', disabled, placeholder }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
@@ -42,31 +45,43 @@ export default function FileUpload({ id, value, fileName, onChange, accept = '.p
 
   return (
     <div className="min-w-0">
-      <div
-        className={cn(
-          'flex h-10 w-full items-center gap-2 rounded-md border border-dashed px-3 text-sm transition',
-          value ? 'border-primary/60 bg-primary-soft' : 'border-field-line bg-field',
-          disabled ? 'cursor-not-allowed opacity-60' : 'hover:border-primary/60',
-        )}
-      >
-        <button
-          id={id}
-          type="button"
-          disabled={disabled}
-          onClick={() => inputRef.current?.click()}
-          title={value ? `${fileName} - click to replace` : `${placeholder} (${accept.replace(/\./g, '').toUpperCase()}, up to ${MAX_FILE_MB} MB)`}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none disabled:cursor-not-allowed"
-        >
-          {value ? <FileText size={17} className="shrink-0 text-info" /> : <Upload size={17} className="shrink-0 text-muted" />}
-          <span className={cn('truncate', value ? 'text-ink' : 'text-muted')}>{value ? fileName : placeholder}</span>
-        </button>
-        {value && !disabled && (
-          <button type="button" aria-label="Remove file" onClick={() => onChange('', '')} className="shrink-0 rounded p-1 text-muted hover:text-danger">
-            <X size={15} />
+      <div className="flex h-10 items-center">
+        {value ? (
+          <span className="inline-flex max-w-full items-center gap-2 rounded-md border border-primary/50 bg-primary-soft px-2.5 py-1.5 text-sm">
+            <FileText size={16} className="shrink-0 text-info" />
+            <button
+              id={id}
+              type="button"
+              disabled={disabled}
+              onClick={() => inputRef.current?.click()}
+              title={`${fileName} - click to replace`}
+              className="min-w-0 truncate text-left font-medium text-info hover:underline focus:outline-none"
+            >
+              {fileName}
+            </button>
+            {!disabled && (
+              <button type="button" aria-label="Remove file" onClick={() => onChange('', '')} className="shrink-0 rounded p-0.5 text-muted hover:text-danger">
+                <X size={14} />
+              </button>
+            )}
+          </span>
+        ) : (
+          <button
+            id={id}
+            type="button"
+            disabled={disabled}
+            onClick={() => inputRef.current?.click()}
+            title={`${placeholder} (${accept.replace(/\./g, '').toUpperCase()}, up to ${MAX_FILE_MB} MB)`}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-md py-1 text-sm font-medium focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
+              disabled ? 'cursor-not-allowed text-muted opacity-60' : 'text-info hover:underline',
+            )}
+          >
+            <Upload size={16} /> {placeholder}
           </button>
         )}
       </div>
-      {error && <p className="mt-1 truncate text-xs text-danger" title={error}>{error}</p>}
+      {error && <p className="truncate text-xs text-danger" title={error}>{error}</p>}
       <input ref={inputRef} type="file" accept={accept} className="sr-only" tabIndex={-1} onChange={(e) => handleFile(e.target.files?.[0])} />
     </div>
   );

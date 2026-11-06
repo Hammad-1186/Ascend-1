@@ -80,7 +80,6 @@ export function useHrMemberForm({ catalog, initial }: Args) {
       // Un-ticking a status clears what belonged to it, so a record never says "Not selected" but still has a selection date.
       if (name === 'selected' && value !== 'yes') next.selectedDate = '';
       if (name === 'loaIssued' && value !== 'yes') { next.loaIssuedDate = ''; next.loaFile = ''; next.loaFileName = ''; }
-      if (name === 'joined' && value !== 'yes') next.dateOfJoining = '';
       if (name === 'technologyTheme') { next.lab = ''; next.projectId = ''; next.projectDuration = ''; }
       if (name === 'lab') { next.projectId = ''; next.projectDuration = ''; }
       if (name === 'projectId') {

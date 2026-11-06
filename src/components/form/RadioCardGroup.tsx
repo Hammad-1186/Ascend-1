@@ -17,7 +17,7 @@ export default function RadioCardGroup<T extends string>({ name, options, value,
           <label
             key={o.value}
             className={cn(
-              'flex h-9 cursor-pointer items-center gap-3 rounded-md border px-4 text-sm transition',
+              'flex h-8 cursor-pointer items-center gap-3 rounded-md border px-4 text-sm transition',
               checked ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface',
             )}
           >

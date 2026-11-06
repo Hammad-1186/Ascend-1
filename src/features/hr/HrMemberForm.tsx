@@ -23,8 +23,8 @@ interface Props {
 }
 
 /**
- * Multi-step form (Strategic HR: one single page, no stepper / review). HR Type card, then the stepper (shown on every step incl. Review), the step's cards, and Previous / Next right
- * under the last card. The Review step is the same summary as the View page.
+ * Multi-step form (Strategic HR: one single page, no stepper / review). HR Type bar, then the stepper (shown on every step incl. Review), the step's cards, and Previous / Next at the bottom,
+ * right under the last card. The Review step is the same summary as the View page.
  * Presentational - all state lives in useHrMemberForm; Save / Cancel are in the page header (HrMemberFormPage).
  */
 export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props) {
@@ -62,14 +62,14 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
     // HR Type is one slim bar (title + radios on a single line) instead of a tall card, to keep the page short.
     if (g.kind === 'hrType') {
       return (
-        <section key={g.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-line bg-surface px-4 py-1.5">
+        <section key={g.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-line bg-surface px-4 py-1">
           <h2 className="text-base font-semibold">{g.title}</h2>
           <RadioCardGroup<HrType> name="hrType" options={HR_TYPE_OPTIONS as Array<{ value: HrType; label: string }>} value={form.hrType} onChange={form.setHrType} />
         </section>
       );
     }
     return (
-    <SectionCard key={g.id} title={g.title}>
+    <SectionCard key={g.id} title={g.title} icon={g.icon} className={cn('h-full', g.className)}>
       {(
         <div className={cn(photoField && 'flex flex-col gap-5 md:flex-row')}>
           {/* The photo sits beside the fields (not on its own row) so the page stays short enough not to scroll. */}
@@ -88,28 +88,26 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
   const otherGroups = currentStep?.groups.filter((g) => g.kind !== 'hrType') ?? [];
 
   return (
-    <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-2.5">
+    <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-2">
       {typeGroup && renderGroup(typeGroup)}
-      {!form.isSingleStep && (
-        <Stepper
-          steps={stepItems}
-          current={stepIndex}
-          maxReached={form.maxStep}
-          onSelect={form.goTo}
-          trailing={
-            // Previous / Next live in the stepper bar, so there is no extra button row under the cards.
-            <>
-              {!isFirst && <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev} aria-label="Previous step" className="!px-3 !py-1.5 text-sm"><span className="hidden xl:inline">Previous</span></Button>}
-              {!isReview && <Button type="submit" disabled={saving} className="!px-4 !py-1.5 text-sm">Next <ChevronRight size={16} /></Button>}
-            </>
-          }
-        />
-      )}
+      {!form.isSingleStep && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
 
       {/* Scrolls only on very short screens; the steps are sized to fit without it. */}
-      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto">
-        {isReview ? <MemberOverview member={draft} catalog={catalog} /> : otherGroups.map(renderGroup)}
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+        {isReview ? (
+          <MemberOverview member={draft} catalog={catalog} />
+        ) : (
+          // A step may lay its cards out side by side (step.layout); otherwise they stack.
+          <div className={currentStep?.layout ? cn('grid grid-cols-1 gap-2', currentStep.layout) : 'space-y-2'}>{otherGroups.map(renderGroup)}</div>
+        )}
 
+        {/* Previous / Next at the bottom, right under the cards. */}
+        {!form.isSingleStep && (
+          <div className="flex items-center justify-between gap-3 pt-0.5">
+            {isFirst ? <span /> : <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev} className="!py-1.5">Previous</Button>}
+            {!isReview && <Button type="submit" disabled={saving} className="!py-1.5">Next <ChevronRight size={16} /></Button>}
+          </div>
+        )}
       </div>
     </form>
   );
