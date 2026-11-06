@@ -7,7 +7,7 @@ import Stepper from '../../components/ui/Stepper';
 import RadioCardGroup from '../../components/form/RadioCardGroup';
 import FormFieldRenderer from '../../components/form/FormFieldRenderer';
 import MemberOverview from './MemberOverview';
-import { HR_TYPE_OPTIONS, type FormGroup } from './hrFormConfig';
+import { HR_TYPE_OPTIONS, type FieldDef, type FormGroup } from './hrFormConfig';
 import type { HrMemberFormApi } from './useHrMemberForm';
 import type { HrCatalog, HrMember, HrType } from '../../types/hr';
 
@@ -41,50 +41,75 @@ export default function HrMemberForm({ form, catalog, saving, onSubmit }: Props)
   // The Review step shows the unsaved values through the exact component the View page uses.
   const draft: HrMember = { id: 'draft', ...form.buildPayload() };
 
-  const renderGroup = (g: FormGroup) => (
+  const renderField = (f: FieldDef, className?: string) => (
+    <FormFieldRenderer
+      key={f.id}
+      field={f}
+      value={form.values[f.name]}
+      error={form.errors[f.id]}
+      options={form.optionsFor(f)}
+      disabled={form.isDisabled(f)}
+      placeholder={form.placeholderFor(f)}
+      fileName={f.fileNameKey ? form.values[f.fileNameKey] : undefined}
+      onChange={form.setValue}
+      className={className}
+    />
+  );
+
+  const renderGroup = (g: FormGroup) => {
+    const photoField = g.fields.find((f) => f.component === 'image');
+    const fields = g.fields.filter((f) => f !== photoField);
+    // HR Type is one slim bar (title + radios on a single line) instead of a tall card, to keep the page short.
+    if (g.kind === 'hrType') {
+      return (
+        <section key={g.id} className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-line bg-surface px-4 py-1.5">
+          <h2 className="text-base font-semibold">{g.title}</h2>
+          <RadioCardGroup<HrType> name="hrType" options={HR_TYPE_OPTIONS as Array<{ value: HrType; label: string }>} value={form.hrType} onChange={form.setHrType} />
+        </section>
+      );
+    }
+    return (
     <SectionCard key={g.id} title={g.title}>
-      {g.kind === 'hrType' ? (
-        <RadioCardGroup<HrType> name="hrType" options={HR_TYPE_OPTIONS as Array<{ value: HrType; label: string }>} value={form.hrType} onChange={form.setHrType} />
-      ) : (
-        <div className={cn('grid grid-cols-1 gap-x-5 gap-y-4', COLUMNS[g.columns])}>
-          {g.fields.map((f) => (
-            <FormFieldRenderer
-              key={f.id}
-              field={f}
-              value={form.values[f.name]}
-              error={form.errors[f.id]}
-              options={form.optionsFor(f)}
-              disabled={form.isDisabled(f)}
-              placeholder={form.placeholderFor(f)}
-              onChange={form.setValue}
-              className={f.span === 'full' ? 'md:col-span-full' : ''}
-            />
-          ))}
+      {(
+        <div className={cn(photoField && 'flex flex-col gap-5 md:flex-row')}>
+          {/* The photo sits beside the fields (not on its own row) so the page stays short enough not to scroll. */}
+          {photoField && <div className="shrink-0">{renderField(photoField)}</div>}
+          <div className={cn('grid min-w-0 grid-cols-1 gap-x-4 gap-y-3', photoField ? cn('flex-1 md:grid-cols-2', g.columns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3') : COLUMNS[g.columns])}>
+            {fields.map((f) => renderField(f, f.span === 'full' ? 'md:col-span-full' : f.span === 2 ? 'md:col-span-2' : ''))}
+          </div>
         </div>
       )}
     </SectionCard>
-  );
+    );
+  };
 
   // The HR Type card (first step only) sits ABOVE the stepper, so switching Contractual <-> Strategic never moves it.
   const typeGroup = isReview ? undefined : currentStep?.groups.find((g) => g.kind === 'hrType');
   const otherGroups = currentStep?.groups.filter((g) => g.kind !== 'hrType') ?? [];
 
   return (
-    <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-3">
+    <form id={HR_FORM_ID} onSubmit={handleSubmit} noValidate className="flex min-h-0 flex-1 flex-col gap-2.5">
       {typeGroup && renderGroup(typeGroup)}
-      {!form.isSingleStep && <Stepper steps={stepItems} current={stepIndex} maxReached={form.maxStep} onSelect={form.goTo} />}
+      {!form.isSingleStep && (
+        <Stepper
+          steps={stepItems}
+          current={stepIndex}
+          maxReached={form.maxStep}
+          onSelect={form.goTo}
+          trailing={
+            // Previous / Next live in the stepper bar, so there is no extra button row under the cards.
+            <>
+              {!isFirst && <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev} aria-label="Previous step" className="!px-3 !py-1.5 text-sm"><span className="hidden xl:inline">Previous</span></Button>}
+              {!isReview && <Button type="submit" disabled={saving} className="!px-4 !py-1.5 text-sm">Next <ChevronRight size={16} /></Button>}
+            </>
+          }
+        />
+      )}
 
-      {/* Only this area scrolls, and only if a step is taller than the screen. */}
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
+      {/* Scrolls only on very short screens; the steps are sized to fit without it. */}
+      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto">
         {isReview ? <MemberOverview member={draft} catalog={catalog} /> : otherGroups.map(renderGroup)}
 
-        {/* Right after the last card, not pinned to the bottom of the screen. */}
-        {!form.isSingleStep && (
-          <div className="flex items-center justify-between gap-3 pt-1">
-            {isFirst ? <span /> : <Button variant="outline" icon={ChevronLeft} onClick={form.goPrev}>Previous</Button>}
-            {!isReview && <Button type="submit" disabled={saving}>Next <ChevronRight size={16} /></Button>}
-          </div>
-        )}
       </div>
     </form>
   );

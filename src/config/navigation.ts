@@ -14,7 +14,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
     { to: '/hierarchies', label: 'Hierarchies', icon: Network },
   ] },
   { label: 'Directory', items: [
-    { to: '/people', label: 'People', icon: Users },
+    { to: '/people', label: 'HR', icon: Users },
     { to: '/universities', label: 'Universities', icon: GraduationCap },
   ] },
   { label: 'Operations', items: [

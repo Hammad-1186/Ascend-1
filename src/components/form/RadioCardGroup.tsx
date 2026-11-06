@@ -10,14 +10,14 @@ interface Props<T extends string> {
 
 export default function RadioCardGroup<T extends string>({ name, options, value, onChange }: Props<T>) {
   return (
-    <div role="radiogroup" className="flex flex-wrap gap-4">
+    <div role="radiogroup" className="flex flex-wrap gap-3">
       {options.map((o) => {
         const checked = o.value === value;
         return (
           <label
             key={o.value}
             className={cn(
-              'flex h-12 cursor-pointer items-center gap-3 rounded-md border px-4 text-base transition',
+              'flex h-9 cursor-pointer items-center gap-3 rounded-md border px-4 text-sm transition',
               checked ? 'border-primary bg-primary-soft' : 'border-transparent hover:bg-surface',
             )}
           >

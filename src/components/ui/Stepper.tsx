@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Check, type LucideIcon } from 'lucide-react';
 import { cn } from '../../lib';
 
@@ -9,15 +10,17 @@ interface Props {
   /** Furthest step that may be clicked. */
   maxReached: number;
   onSelect: (index: number) => void;
+  /** Right-hand end of the bar (the form puts Previous / Next here so the page needs no extra row). */
+  trailing?: ReactNode;
 }
 
 /**
  * Numbered step tabs, left-aligned: the current step is solid blue, finished steps get a tick.
  * No icons and no connector lines; if the screen is narrow the tabs wrap onto a second row.
  */
-export default function Stepper({ steps, current, maxReached, onSelect }: Props) {
+export default function Stepper({ steps, current, maxReached, onSelect, trailing }: Props) {
   return (
-    <nav aria-label="Form progress" className="rounded-lg border border-line bg-surface p-1">
+    <nav aria-label="Form progress" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-line bg-surface p-1">
       <ol className="flex flex-wrap items-center justify-start gap-0.5">
         {steps.map((s, i) => {
           const done = i < current;
@@ -31,7 +34,7 @@ export default function Stepper({ steps, current, maxReached, onSelect }: Props)
                 onClick={() => onSelect(i)}
                 aria-current={active ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2.5 text-base font-semibold transition',
+                  'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2 text-sm font-semibold transition xl:text-base',
                   active ? 'bg-primary text-white' : 'text-muted',
                   !active && clickable && 'hover:bg-ink/5 hover:text-ink',
                   !clickable && 'cursor-not-allowed',
@@ -51,6 +54,7 @@ export default function Stepper({ steps, current, maxReached, onSelect }: Props)
           );
         })}
       </ol>
+      {trailing && <div className="ml-auto flex items-center gap-2 pr-1">{trailing}</div>}
     </nav>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Briefcase, CheckCircle2, ChevronLeft, ChevronRight, Eye, Pencil, Plus, RotateCcw, Search, UserSearch, Users, UsersRound, X } from 'lucide-react';
 import { cn } from '../../lib';
@@ -17,7 +17,9 @@ import type { HrMember, HrType } from '../../types/hr';
 /** Empty values show a quiet dash instead of competing with real data. */
 const orDash = (v?: string) => (v ? v : <span className="text-muted/60">{EMPTY_DISPLAY}</span>);
 
-const PAGE_SIZE = 5;
+const DEFAULT_PAGE_SIZE = 5; // used until the table has been measured (see the layout effect below)
+const MIN_ROWS = 3;
+const MAX_ROWS = 12;
 /** Two alternating row colours (defined for light AND dark in styles/theme.css). */
 const ROW_STRIPE = 'odd:bg-row-a even:bg-row-b';
 
@@ -31,6 +33,8 @@ export default function HrDirectoryPage() {
   const [members, setMembers] = useState<HrMember[]>([]);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const tableBox = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const [preview, setPreview] = useState<{ src: string; name: string } | null>(null);
@@ -68,10 +72,25 @@ export default function HrDirectoryPage() {
     strategic: members.filter((m) => m.hrType === 'strategic').length,
   };
 
-  const pageSize = PAGE_SIZE;
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pageCount);
   const pageRows = filtered.slice((current - 1) * pageSize, current * pageSize);
+  // The table shows exactly as many rows as fit in the space left on screen, so the page itself never needs to scroll;
+  // the pager moves through the rest. Re-measured whenever the window (or the layout around the table) changes size.
+  useLayoutEffect(() => {
+    const box = tableBox.current;
+    if (!box) return;
+    const fit = () => {
+      const head = box.querySelector('thead')?.getBoundingClientRect().height ?? 44;
+      const row = box.querySelector('tbody tr[data-row]')?.getBoundingClientRect().height ?? 54;
+      setPageSize(Math.max(MIN_ROWS, Math.min(MAX_ROWS, Math.floor((box.clientHeight - head - 2) / row))));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(box);
+    return () => ro.disconnect();
+  }, [pageRows.length]);
+
   const from = filtered.length === 0 ? 0 : (current - 1) * pageSize + 1;
   const to = Math.min(current * pageSize, filtered.length);
 
@@ -97,7 +116,7 @@ export default function HrDirectoryPage() {
   const hasFilters = JSON.stringify(filters) !== JSON.stringify(NO_FILTERS);
 
   return (
-    <div className="px-4 py-3 sm:px-6 sm:py-4">
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto px-4 py-2 sm:px-6 sm:py-3">
       <PageHeader
         title="HR Directory"
         actions={<Link to="/people/new" className={buttonClasses('primary')}><Plus size={16} /> Add HR</Link>}
@@ -111,13 +130,13 @@ export default function HrDirectoryPage() {
         </div>
       )}
 
-      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="mb-2.5 grid shrink-0 grid-cols-3 gap-2 sm:gap-4">
         <StatCard icon={UsersRound} label="Total HR Members" value={counts.total} tone="bg-primary-soft text-info" />
         <StatCard icon={Briefcase} label="Contractual" value={counts.contractual} tone="bg-primary-soft text-info" />
         <StatCard icon={UsersRound} label="Strategic" value={counts.strategic} tone="bg-emerald-600 text-white" />
       </div>
 
-      <div className="mb-3 grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.8fr_1fr_1fr_1.2fr_auto]">
+      <div className="mb-2.5 grid shrink-0 grid-cols-2 items-center gap-3 lg:grid-cols-[1.8fr_1fr_1.2fr_1fr_auto]">
         <div className="relative col-span-2 lg:col-span-1">
           <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -128,28 +147,28 @@ export default function HrDirectoryPage() {
           />
         </div>
         <SelectInput aria-label="HR Type" placeholder="All HR Types" options={HR_TYPE_OPTIONS} value={filters.type} onChange={(e) => setFilter({ type: e.target.value as Filters['type'] })} />
-        <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
         <SelectInput aria-label="Technology Theme" placeholder="All Themes" options={themeOptions} value={filters.theme} onChange={(e) => setFilter({ theme: e.target.value, lab: '' })} />
+        <SelectInput aria-label="Lab" placeholder="All Labs" options={labOptions} value={filters.lab} onChange={(e) => setFilter({ lab: e.target.value })} />
         <button type="button" onClick={() => { setFilters(NO_FILTERS); setPage(1); }} disabled={!hasFilters} className="col-span-2 inline-flex items-center gap-2 justify-self-end text-sm text-info lg:col-span-1 hover:underline disabled:opacity-40 disabled:no-underline">
           <RotateCcw size={15} /> Clear Filters
         </button>
       </div>
 
       {/* Same table on every screen size; on narrow screens it scrolls horizontally. */}
-          <div className="overflow-x-auto rounded-lg border border-line">
+          <div ref={tableBox} className="min-h-[170px] flex-1 overflow-x-auto overflow-y-hidden rounded-lg border border-line">
             <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
                 <tr className="border-b border-line bg-primary-soft/40 text-xs font-semibold uppercase tracking-wider text-muted">
-                  <th className="w-10 px-3 py-3"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
-                  {['Name', 'Contact', 'Lab', 'Project', 'Organization', 'Joining Date', 'HR Type'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-3">{h}</th>)}
-                  <th className="whitespace-nowrap px-2 py-3 text-center">Actions</th>
+                  <th className="w-10 px-3 py-2.5"><input type="checkbox" aria-label="Select all" checked={allOnPageSelected} onChange={toggleAll} className="h-4 w-4 accent-primary" /></th>
+                  {['Name', 'Lab', 'Project', 'Organization', 'Joining Date', 'Contact', 'HR Type'].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2">{h}</th>)}
+                  <th className="whitespace-nowrap px-2 py-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map(({ m, ctx }) => (
-                  <tr key={m.id} onClick={() => navigate(`/people/${m.id}`)} className={cn('group/row cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/[0.06]', ROW_STRIPE)}>
-                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
-                    <td className="px-2 py-3">
+                  <tr key={m.id} data-row onClick={() => navigate(`/people/${m.id}`)} className={cn('group/row cursor-pointer border-b border-line/60 last:border-0 hover:bg-primary/[0.06]', ROW_STRIPE)}>
+                    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.has(m.id)} onChange={() => toggleOne(m.id)} className="h-4 w-4 accent-primary" /></td>
+                    <td className="px-2 py-2">
                       <div className="flex items-center gap-2.5">
                         {m.photo ? (
                           // Clicking the photo opens it full size (and does NOT open the member page).
@@ -165,13 +184,13 @@ export default function HrDirectoryPage() {
                         </Link>
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-2 py-3 tabular-nums text-ink/90">{orDash(m.phone)}</td>
-                    <td className="whitespace-nowrap px-2 py-3 font-mono text-[13px] font-medium">{orDash(ctx.lab?.name)}</td>
-                    <td className="px-2 py-3"><span className="block min-w-[150px] max-w-[230px] leading-snug text-ink/90">{orDash(ctx.project?.title)}</span></td>
-                    <td className="whitespace-nowrap px-2 py-3 text-ink/90">{orDash(ctx.organization)}</td>
-                    <td className="whitespace-nowrap px-2 py-3 tabular-nums text-muted">{orDash(m.dateOfJoining ? formatDate(m.dateOfJoining) : undefined)}</td>
-                    <td className="px-2 py-3"><HrTypeBadge type={m.hrType} /></td>
-                    <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td className="whitespace-nowrap px-2 py-2 font-mono text-[13px] font-medium">{orDash(ctx.lab?.name)}</td>
+                    <td className="px-2 py-2"><span className="block min-w-[150px] max-w-[230px] truncate leading-snug text-ink/90" title={ctx.project?.title}>{orDash(ctx.project?.title)}</span></td>
+                    <td className="whitespace-nowrap px-2 py-2 text-ink/90">{orDash(ctx.organization)}</td>
+                    <td className="whitespace-nowrap px-2 py-2 tabular-nums text-muted">{orDash(m.dateOfJoining ? formatDate(m.dateOfJoining) : undefined)}</td>
+                    <td className="whitespace-nowrap px-2 py-2 tabular-nums text-ink/90">{orDash(m.phone)}</td>
+                    <td className="px-2 py-2"><HrTypeBadge type={m.hrType} /></td>
+                    <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
                         <Link to={`/people/${m.id}`} aria-label={`View ${m.name}`} title="View" className="rounded-md p-1.5 text-muted transition hover:bg-primary/10 hover:text-info"><Eye size={18} /></Link>
                         <Link to={`/people/${m.id}/edit`} aria-label={`Edit ${m.name}`} title="Edit" className="rounded-md p-1.5 text-muted transition hover:bg-primary/10 hover:text-info"><Pencil size={17} /></Link>
@@ -186,7 +205,7 @@ export default function HrDirectoryPage() {
             </table>
           </div>
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-2.5 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">Showing {from}–{to} of {filtered.length} HR members</p>
         <div className="flex items-center gap-2 self-center sm:self-auto">
           <PageBtn aria-label="Previous page" disabled={current === 1} onClick={() => setPage(current - 1)}><ChevronLeft size={16} /></PageBtn>

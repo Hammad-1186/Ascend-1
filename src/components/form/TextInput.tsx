@@ -11,13 +11,13 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 export default function TextInput({ icon: Icon, suffix, className, ...rest }: Props) {
   return (
     <div className="relative">
-      {Icon && <Icon size={19} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink" />}
+      {Icon && <Icon size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink" />}
       <input
         className={cn(
-          'h-12 w-full truncate rounded-md border border-field-line bg-field text-base text-ink placeholder:text-muted',
+          'h-10 w-full truncate rounded-md border border-field-line bg-field text-sm text-ink placeholder:text-muted',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
           '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-          Icon ? 'pl-11' : 'pl-3.5',
+          Icon ? 'pl-10' : 'pl-3.5',
           suffix ? 'pr-24' : 'pr-3',
           className,
         )}

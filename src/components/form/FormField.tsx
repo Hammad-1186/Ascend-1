@@ -13,9 +13,9 @@ interface Props {
 /** Label (+ optional required marker) and error text around any input. Long labels are truncated to one line. */
 export default function FormField({ label, htmlFor, required, error, children, className }: Props) {
   return (
-    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1', className)}>
       {label && (
-        <label htmlFor={htmlFor} title={label} className="truncate text-base font-medium">
+        <label htmlFor={htmlFor} title={label} className="truncate text-sm font-medium">
           {label}
           {required && <span className="ml-1 text-danger">*</span>}
         </label>

@@ -34,7 +34,7 @@ export default function HrMemberFormPage({ mode }: { mode: 'create' | 'edit' }) 
       <div className="grid h-full place-items-center px-6">
         <div className="text-center">
           <p className="mb-4 text-muted">This HR member could not be found.</p>
-          <Link to="/people" className={buttonClasses('primary')}>Back to HR Directory</Link>
+          <Link to="/people" className={buttonClasses('primary')}>Back</Link>
         </div>
       </div>
     );
@@ -78,10 +78,10 @@ function FormContainer({ mode, catalog, member }: { mode: 'create' | 'edit'; cat
   const isFinalSave = form.isReview || form.isSingleStep;
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-3 sm:px-6 sm:py-4">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-2 sm:px-6 sm:py-3">
       <PageHeader
         backTo="/people"
-        backLabel="Back to HR Directory"
+        backLabel="Back"
         title={mode === 'edit' ? 'Edit HR' : 'Add HR'}
         actions={
           <>

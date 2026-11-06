@@ -27,7 +27,7 @@ export default function HrMemberViewPage() {
       <div className="grid h-full place-items-center px-6">
         <div className="text-center">
           <p className="mb-4 text-muted">This HR member could not be found.</p>
-          <Link to="/people" className={buttonClasses('primary')}>Back to HR Directory</Link>
+          <Link to="/people" className={buttonClasses('primary')}>Back</Link>
         </div>
       </div>
     );
@@ -37,10 +37,10 @@ export default function HrMemberViewPage() {
 
 function MemberDetails({ member, catalog }: { member: HrMember; catalog: HrCatalog }) {
   return (
-    <div className="px-4 py-3 sm:px-6 sm:py-4">
+    <div className="px-4 py-2 sm:px-6 sm:py-3">
       <PageHeader
         backTo="/people"
-        backLabel="Back to HR Directory"
+        backLabel="Back"
         title="Member Details"
         actions={<Link to={`/people/${member.id}/edit`} className={buttonClasses('primary')}><Pencil size={16} /> Edit</Link>}
       />

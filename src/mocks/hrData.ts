@@ -43,6 +43,19 @@ export const projectsMock: Project[] = [
   project('IMP-0302', 'Additive Manufacturing Qualification', '5.2', 'initiated', 24),
 ];
 
+export const rolesMock: SelectOption[] = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'executive', label: 'Executive' },
+  { value: 'tti', label: 'Technology Theme Incharge (TTI)' },
+  { value: 'pl', label: 'Project Lead (PL)' },
+  { value: 'li', label: 'Lab Incharge (LI)' },
+];
+
+export const disciplinesMock: SelectOption[] = [
+  'Electrical Engineering', 'Mechanical Engineering', 'Computer Science', 'Software Engineering', 'Civil Engineering',
+  'Chemical Engineering', 'Aerospace Engineering', 'Materials Science', 'Mathematics', 'Physics', 'Other',
+].map(opt);
+
 export const commissionsMock: SelectOption[] = ['Commission A', 'Commission B', 'Commission C', 'Commission D'].map(opt);
 
 // Each organization belongs to one commission.
@@ -60,6 +73,8 @@ export const catalogMock: HrCatalog = {
   projects: projectsMock,
   qualifications: ['PhD', 'MS / MPhil', 'BS / BE', 'Diploma'].map(opt),
   commissions: commissionsMock,
+  roles: rolesMock,
+  disciplines: disciplinesMock,
   organizations: organizationsMock,
 };
 
@@ -77,12 +92,15 @@ const ra = (id: string, name: string, labNum: string, projectCode: string, o: Pa
   return {
     ...EMPTY_FORM_VALUES, id, hrType: 'contractual', ...splitName(name), email: emailOf(name), qualification: 'ms-mphil',
     technologyTheme: l.themeId, lab: l.id, projectId: p.id, projectDuration: String(p.durationMonths),
-    selected: 'yes', loaIssued: 'yes', joined: 'yes', contractDuration: '12', ...o,
+    selected: 'yes', selectedDate: '2025-02-10', loaIssued: 'yes', loaIssuedDate: '2025-03-01', joined: 'yes', contractDuration: '12',
+    gender: 'male', dob: '1996-04-15', discipline: 'electrical-engineering', cnic: '35202-1234567-1', ...o,
   };
 };
 
+let strategicCount = 0; // demo data: hand the roles out in turn
 const strategic = (id: string, name: string, organization: string, o: Partial<HrMember>): HrMember => ({
   ...EMPTY_FORM_VALUES, id, hrType: 'strategic', ...splitName(name), email: emailOf(name),
+  role: rolesMock[strategicCount++ % rolesMock.length].value,
   commission: organizationsMock.find((x) => x.value === organization)?.commissionId ?? '', organization, ...o,
 });
 

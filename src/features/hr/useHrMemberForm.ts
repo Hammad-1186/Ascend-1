@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  HR_FORM_STEPS, HR_TYPES, REVIEW_STEP, YES_NO_OPTIONS, isVisibleFor, type FieldDef, type FormStep,
+  GENDER_OPTIONS, HR_FORM_STEPS, HR_TYPES, REVIEW_STEP, YES_NO_OPTIONS, isVisibleFor, type FieldDef, type FormStep,
 } from './hrFormConfig';
 import {
   EMPTY_FORM_VALUES, isActiveProject, type HrCatalog, type HrFormValues, type HrMember, type HrMemberInput, type HrType, type SelectOption,
@@ -29,7 +29,9 @@ const FIELD_NAME_BY_ID: Record<string, keyof HrFormValues> = Object.fromEntries(
   HR_FORM_STEPS.flatMap((s) => s.groups.flatMap((g) => g.fields.map((f) => [f.id, f.name]))),
 );
 
-const fieldsOf = (step: FormStep): FieldDef[] => step.groups.flatMap((g) => g.fields);
+const fieldsOf = (step: FormStep): FieldDef[] => step.groups.flatMap((g) => g.fields).filter((f) => f.component !== 'spacer');
+/** Every value key a field writes (a file field also stores its file name). */
+const keysOf = (f: FieldDef): Array<keyof HrFormValues> => (f.fileNameKey ? [f.name, f.fileNameKey] : [f.name]);
 
 interface Args { catalog: HrCatalog | null; initial?: HrMember }
 
@@ -75,6 +77,10 @@ export function useHrMemberForm({ catalog, initial }: Args) {
     setValues((prev) => {
       const next = { ...prev, [name]: value };
       if (name === 'commission') next.organization = '';
+      // Un-ticking a status clears what belonged to it, so a record never says "Not selected" but still has a selection date.
+      if (name === 'selected' && value !== 'yes') next.selectedDate = '';
+      if (name === 'loaIssued' && value !== 'yes') { next.loaIssuedDate = ''; next.loaFile = ''; next.loaFileName = ''; }
+      if (name === 'joined' && value !== 'yes') next.dateOfJoining = '';
       if (name === 'technologyTheme') { next.lab = ''; next.projectId = ''; next.projectDuration = ''; }
       if (name === 'lab') { next.projectId = ''; next.projectDuration = ''; }
       if (name === 'projectId') {
@@ -88,7 +94,7 @@ export function useHrMemberForm({ catalog, initial }: Args) {
 
   const setHrType = (type: HrType) => {
     if (type === hrType) return;
-    const keep = new Set(buildSteps(type).flatMap((s) => fieldsOf(s).map((f) => f.name)));
+    const keep = new Set(buildSteps(type).flatMap((s) => fieldsOf(s).flatMap(keysOf)));
     // Clear values of fields that are now hidden so they never reach the API.
     setValues((v) => Object.fromEntries(Object.entries(v).map(([k, val]) => [k, keep.has(k as keyof HrFormValues) ? val : ''])) as unknown as HrFormValues);
     setHrTypeState(type);
@@ -111,6 +117,9 @@ export function useHrMemberForm({ catalog, initial }: Args) {
       case 'projectCodes': return activeProjects.map((p) => ({ value: p.id, label: p.code }));
       case 'projectTitles': return activeProjects.map((p) => ({ value: p.id, label: p.title }));
       case 'qualifications': return catalog.qualifications;
+      case 'disciplines': return catalog.disciplines;
+      case 'genders': return GENDER_OPTIONS;
+      case 'roles': return catalog.roles;
       case 'commissions': return catalog.commissions;
       case 'organizations': return catalog.organizations.filter((o) => o.commissionId === values.commission);
       case 'yesNo': return YES_NO_OPTIONS;
@@ -118,7 +127,10 @@ export function useHrMemberForm({ catalog, initial }: Args) {
     }
   };
 
-  const isDisabled = (field: FieldDef): boolean => Boolean(field.dependsOn && !values[field.dependsOn]);
+  const isDisabled = (field: FieldDef): boolean => {
+    if (!field.dependsOn) return false;
+    return field.dependsOnValue ? values[field.dependsOn] !== field.dependsOnValue : !values[field.dependsOn];
+  };
   const placeholderFor = (field: FieldDef): string => {
     if (isDisabled(field)) return field.dependsHint ?? field.placeholder;
     if (field.dependsOn && optionsFor(field).length === 0) return field.emptyHint ?? field.placeholder;
@@ -163,7 +175,7 @@ export function useHrMemberForm({ catalog, initial }: Args) {
   /** Request body: only visible fields. Rename keys here if the API expects different names. */
   const buildPayload = (): HrMemberInput => {
     const payload: HrMemberInput = { ...EMPTY_FORM_VALUES, hrType };
-    steps.flatMap(fieldsOf).forEach((f) => { payload[f.name] = values[f.name].trim(); });
+    steps.flatMap(fieldsOf).flatMap(keysOf).forEach((k) => { payload[k] = values[k].trim(); });
     payload.name = [payload.firstName, payload.lastName].filter(Boolean).join(' '); // full name = first + last
     return payload;
   };

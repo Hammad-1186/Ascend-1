@@ -5,7 +5,7 @@ import { cn } from '../../lib';
 import { MONTH_NAMES, formatDate, parseIso, todayParts, toIso, type DateParts } from '../../utils/date';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-const YEARS = Array.from({ length: 61 }, (_, i) => 1990 + i);
+const DEFAULT_YEARS: [number, number] = [1990, 2050];
 const POPOVER_W = 288;
 const POPOVER_H = 360;
 
@@ -15,10 +15,15 @@ interface Props {
   value: string;
   onChange: (iso: string) => void;
   placeholder?: string;
+  disabled?: boolean;
+  /** First and last year offered in the year dropdown (default 1990 - 2050). Use e.g. [1950, thisYear] for a date of birth. */
+  yearRange?: [number, number];
 }
 
 /** Calendar popover. The chosen date is shown on the button as "DD Mon YYYY" and stored as ISO. */
-export default function DatePicker({ id, value, onChange, placeholder = 'Select date' }: Props) {
+export default function DatePicker({ id, value, onChange, placeholder = 'Select date', disabled, yearRange = DEFAULT_YEARS }: Props) {
+  const [fromYear, toYear] = yearRange;
+  const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => fromYear + i);
   const selected = parseIso(value);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<{ y: number; m: number }>(() => {
@@ -93,15 +98,17 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={toggle}
+        disabled={disabled}
         className={cn(
-          'relative flex h-12 w-full items-center rounded-md border border-field-line bg-field pl-3.5 pr-10 text-left text-base',
+          'relative flex h-10 w-full items-center rounded-md border border-field-line bg-field pl-3.5 pr-10 text-left text-sm',
           'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
           open && 'border-primary ring-1 ring-primary',
+          disabled && 'cursor-not-allowed opacity-60',
         )}
       >
         {!value && <CalendarDays size={18} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted" />}
         <span className={cn('truncate', value ? 'text-ink' : 'text-muted')}>{value ? formatDate(value) : placeholder}</span>
-        {value && (
+        {value && !disabled && (
           <span
             role="button"
             tabIndex={-1}
@@ -128,7 +135,7 @@ export default function DatePicker({ id, value, onChange, placeholder = 'Select 
               {MONTH_NAMES.map((n, i) => <option key={n} value={i} className="bg-field">{n}</option>)}
             </select>
             <select aria-label="Year" value={view.y} onChange={(e) => setView((v) => ({ ...v, y: Number(e.target.value) }))} className={selectCls}>
-              {YEARS.map((y) => <option key={y} value={y} className="bg-field">{y}</option>)}
+              {(years.includes(view.y) ? years : [...years, view.y].sort((a, b) => a - b)).map((y) => <option key={y} value={y} className="bg-field">{y}</option>)}
             </select>
             <button type="button" aria-label="Next month" onClick={() => shiftMonth(1)} className={navBtn}><ChevronRight size={16} /></button>
           </div>

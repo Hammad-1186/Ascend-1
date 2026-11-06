@@ -1,6 +1,6 @@
 import {
   User, Mail, Phone, GraduationCap, Building2, Settings, FlaskConical, FolderOpen, Hash, Clock, CheckCircle2, FileCheck2,
-  UserCheck, CalendarDays, Banknote, CalendarClock, MessageSquareText, ClipboardCheck, Users, Layers, Camera, CreditCard, type LucideIcon,
+  UserCheck, CalendarDays, FileText, Cake, Banknote, CalendarClock, MessageSquareText, ClipboardCheck, Users, Layers, Camera, CreditCard, Upload, type LucideIcon,
 } from 'lucide-react';
 import type { BadgeTone } from '../../components/ui/Badge';
 import type { HrFormValues, HrType, ProjectStatus, SelectOption } from '../../types/hr';
@@ -16,6 +16,10 @@ export const HR_TYPE_TONE: Record<HrType, BadgeTone> = { strategic: 'solid', con
 
 export const hrTypeLabel = (t: HrType): string => HR_TYPE_OPTIONS.find((o) => o.value === t)?.label ?? t;
 
+export const GENDER_OPTIONS: SelectOption[] = [
+  { value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' },
+];
+
 export const YES_NO_OPTIONS: SelectOption[] = [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }];
 
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
@@ -23,20 +27,22 @@ export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = {
 };
 
 /** Where a dropdown gets its options from (resolved in useHrMemberForm.optionsFor). */
-export type OptionsKey = 'themes' | 'labs' | 'projectCodes' | 'projectTitles' | 'qualifications' | 'commissions' | 'organizations' | 'yesNo';
+export type OptionsKey = 'themes' | 'labs' | 'projectCodes' | 'projectTitles' | 'qualifications' | 'disciplines' | 'genders' | 'roles' | 'commissions' | 'organizations' | 'yesNo';
 
 export interface FieldDef {
   /** Unique per field on screen (two fields may edit the same `name`, e.g. Project Code / Project Title). */
   id: string;
   name: keyof HrFormValues;
   label: string;
-  component: 'text' | 'select' | 'date' | 'textarea' | 'image';
+  component: 'text' | 'select' | 'date' | 'textarea' | 'image' | 'checkbox' | 'file' | 'spacer';
   inputType?: 'text' | 'email' | 'tel' | 'number';
   icon?: LucideIcon;
   placeholder: string;
   optionsKey?: OptionsKey;
   /** Disabled until this value is filled (Theme -> Lab -> Project cascade). */
   dependsOn?: keyof HrFormValues;
+  /** With `dependsOn`: disabled unless that field equals exactly this (e.g. 'yes' = its checkbox is ticked). */
+  dependsOnValue?: string;
   dependsHint?: string;
   emptyHint?: string;
   /** Small unit label shown inside the input, e.g. "months". */
@@ -44,7 +50,15 @@ export interface FieldDef {
   /** How the value is shown on the Review step and the View page. */
   format?: 'date' | 'currency' | 'months';
   maxLength?: number;
-  span?: 'full';
+  /** 'full' = whole row, 2 = two columns wide. */
+  span?: 'full' | 2;
+  /** `checkbox`: text next to the box. */
+  checkboxText?: string;
+  /** `file`: allowed extensions, and the field that stores the original file name. */
+  accept?: string;
+  fileNameKey?: keyof HrFormValues;
+  /** `date`: years offered in the picker, e.g. [1950, 2010] for a date of birth. */
+  yearRange?: [number, number];
   visibleFor?: HrType[];
 }
 
@@ -73,14 +87,16 @@ export const isVisibleFor = (item: { visibleFor?: HrType[] }, hrType: HrType): b
 const C = [HR_TYPES.CONTRACTUAL];
 const S = [HR_TYPES.STRATEGIC];
 
-const firstName = (id: string): FieldDef => ({ id, name: 'firstName', label: 'First Name', component: 'text', icon: User, placeholder: 'Enter first name' });
-const lastName = (id: string): FieldDef => ({ id, name: 'lastName', label: 'Last Name', component: 'text', icon: User, placeholder: 'Enter last name' });
-const cnic = (id: string): FieldDef => ({ id, name: 'cnic', label: 'CNIC', component: 'text', icon: CreditCard, placeholder: '12345-1234567-1' });
+const firstName = (id: string): FieldDef => ({ id, name: 'firstName', label: 'First Name', component: 'text', icon: User, placeholder: 'First name' });
+const lastName = (id: string): FieldDef => ({ id, name: 'lastName', label: 'Last Name', component: 'text', icon: User, placeholder: 'Last name' });
+const cnic = (id: string): FieldDef => ({ id, name: 'cnic', label: 'CNIC / ID', component: 'text', icon: CreditCard, placeholder: '12345-1234567-1' });
 const photo = (id: string): FieldDef => ({ id, name: 'photo', label: 'Profile Photo', component: 'image', icon: Camera, placeholder: '', span: 'full' });
-const email = (id: string): FieldDef => ({ id, name: 'email', label: 'Email Address', component: 'text', inputType: 'email', icon: Mail, placeholder: 'Enter email address' });
-const phone = (id: string): FieldDef => ({ id, name: 'phone', label: 'Contact #', component: 'text', inputType: 'tel', icon: Phone, placeholder: 'e.g. +92 300 1234567' });
+const email = (id: string): FieldDef => ({ id, name: 'email', label: 'Email Address', component: 'text', inputType: 'email', icon: Mail, placeholder: 'name@example.com' });
+const phone = (id: string): FieldDef => ({ id, name: 'phone', label: 'Contact #', component: 'text', inputType: 'tel', icon: Phone, placeholder: '+92 300 1234567' });
 const hrTypeGroup = (): FormGroup => ({ id: 'type', title: 'HR Type', icon: Users, columns: 1, kind: 'hrType', fields: [] });
 
+/** Empty grid cell (keeps the checkbox / date / upload columns aligned). */
+const spacer = (id: string): FieldDef => ({ id, name: 'name', label: '', component: 'spacer', placeholder: '' });
 const dateOfJoining = (id: string): FieldDef => ({ id, name: 'dateOfJoining', label: 'Date of Joining', component: 'date', icon: CalendarDays, placeholder: 'Select date' });
 const remarks = (id: string): FieldDef => ({ id, name: 'remarks', label: 'Remarks', component: 'textarea', placeholder: 'Add any remarks (optional)', maxLength: 300, span: 'full' });
 
@@ -95,15 +111,19 @@ export const HR_FORM_STEPS: FormStep[] = [
     groups: [
       hrTypeGroup(),
       {
-        id: 'basicInfo', title: 'Personal & Contact Details', icon: User, columns: 2,
+        id: 'basicInfo', title: 'Personal & Contact Details', icon: User, columns: 4,
         fields: [
           photo('photo'),
           firstName('firstName'),
           lastName('lastName'),
+          { id: 'dob', name: 'dob', label: 'Date of Birth', component: 'date', icon: Cake, placeholder: 'Select date', yearRange: [1950, new Date().getFullYear()] },
+          { id: 'gender', name: 'gender', label: 'Gender', component: 'select', icon: User, placeholder: 'Select', optionsKey: 'genders' },
           cnic('cnic'),
           email('email'),
           phone('phone'),
-          { id: 'qualification', name: 'qualification', label: 'Qualification', component: 'select', icon: GraduationCap, placeholder: 'Select qualification', optionsKey: 'qualifications' },
+          { id: 'qualification', name: 'qualification', label: 'Qualification', component: 'select', icon: GraduationCap, placeholder: 'Select', optionsKey: 'qualifications' },
+          { id: 'discipline', name: 'discipline', label: 'Field of Study', component: 'select', icon: GraduationCap, placeholder: 'Select', optionsKey: 'disciplines' },
+          { id: 'cv', name: 'cv', label: 'Upload CV', component: 'file', icon: FileText, placeholder: 'Upload CV (PDF / DOC, max 5 MB)', accept: '.pdf,.doc,.docx', fileNameKey: 'cvName', span: 2 },
         ],
       },
     ],
@@ -129,17 +149,24 @@ export const HR_FORM_STEPS: FormStep[] = [
     ],
   },
   {
+    // Each status is a tick box (ticked = Yes, empty = No) with ITS OWN date (and, for the LOA, its document) on the same row.
+    // The date / upload stay disabled until the box is ticked.
     id: 'appointment', title: 'Appointment', icon: UserCheck, visibleFor: C,
     groups: [
       {
-        id: 'selection', title: 'Selection Status', icon: CheckCircle2, columns: 3,
+        id: 'appointmentStatus', title: 'Appointment Status', icon: CheckCircle2, columns: 3,
         fields: [
-          { id: 'selected', name: 'selected', label: 'Selected', component: 'select', icon: UserCheck, placeholder: 'Select Yes / No', optionsKey: 'yesNo' },
-          { id: 'loaIssued', name: 'loaIssued', label: 'LOA Issued (Letter of Appointment)', component: 'select', icon: FileCheck2, placeholder: 'Select Yes / No', optionsKey: 'yesNo' },
-          { id: 'joined', name: 'joined', label: 'Joined', component: 'select', icon: CheckCircle2, placeholder: 'Select Yes / No', optionsKey: 'yesNo' },
+          { id: 'selected', name: 'selected', label: 'Selection Status', component: 'checkbox', checkboxText: 'Selected', icon: UserCheck, placeholder: '' },
+          { id: 'selectedDate', name: 'selectedDate', label: 'Selection Date', component: 'date', icon: CalendarDays, placeholder: 'Select date', dependsOn: 'selected', dependsOnValue: 'yes', dependsHint: 'Tick "Selected" first' },
+          spacer('sp1'),
+          { id: 'loaIssued', name: 'loaIssued', label: 'LOA Status', component: 'checkbox', checkboxText: 'LOA Issued', icon: FileCheck2, placeholder: '' },
+          { id: 'loaIssuedDate', name: 'loaIssuedDate', label: 'LOA Issued Date', component: 'date', icon: CalendarDays, placeholder: 'Select date', dependsOn: 'loaIssued', dependsOnValue: 'yes', dependsHint: 'Tick "LOA Issued" first' },
+          { id: 'loaFile', name: 'loaFile', label: 'Upload LOA', component: 'file', icon: Upload, placeholder: 'Upload LOA (PDF / DOC)', accept: '.pdf,.doc,.docx', fileNameKey: 'loaFileName', dependsOn: 'loaIssued', dependsOnValue: 'yes', dependsHint: 'Tick "LOA Issued" first' },
+          { id: 'joined', name: 'joined', label: 'Joining Status', component: 'checkbox', checkboxText: 'Joined', icon: CheckCircle2, placeholder: '' },
+          { ...dateOfJoining('dateOfJoining'), label: 'Joining Date', dependsOn: 'joined', dependsOnValue: 'yes', dependsHint: 'Tick "Joined" first' },
+          spacer('sp2'),
         ],
       },
-      { id: 'joining', title: 'Joining Details', icon: CalendarDays, columns: 3, fields: [dateOfJoining('dateOfJoining')] },
     ],
   },
   {
@@ -161,12 +188,10 @@ export const HR_FORM_STEPS: FormStep[] = [
     groups: [
       hrTypeGroup(),
       {
-        id: 'personalS', title: 'Personal & Contact Details', icon: User, columns: 2,
-        fields: [photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), email('emailS'), phone('phoneS')],
-      },
-      {
-        id: 'commissionOrg', title: 'Commission & Organization', icon: Building2, columns: 2,
+        id: 'personalS', title: 'Personal & Organization Details', icon: User, columns: 3,
         fields: [
+          photo('photoS'), firstName('firstNameS'), lastName('lastNameS'), cnic('cnicS'), email('emailS'), phone('phoneS'),
+          { id: 'role', name: 'role', label: 'Role', component: 'select', icon: UserCheck, placeholder: 'Select role', optionsKey: 'roles' },
           { id: 'commission', name: 'commission', label: 'Commission', component: 'select', icon: Building2, placeholder: 'Select commission', optionsKey: 'commissions' },
           { id: 'organization', name: 'organization', label: 'Organization', component: 'select', icon: Building2, placeholder: 'Select organization', optionsKey: 'organizations', dependsOn: 'commission', dependsHint: 'Select a commission first', emptyHint: 'No organizations in this commission' },
         ],
